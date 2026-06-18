@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import Countdown from '../components/Countdown'
 import { useSettings } from '../hooks/useSettings'
 
+const STORAGE_KEY = 'baby_reveal_submitted'
+
 const Petals = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
     {['🌸','🌷','✨','🌸','💫','🌷','✨','🌸'].map((emoji, i) => (
@@ -23,6 +25,7 @@ const Petals = () => (
 
 export default function Home() {
   const { settings } = useSettings()
+  const alreadySubmitted = !!localStorage.getItem(STORAGE_KEY)
   const PARTY_DATE     = new Date(settings.partyDate)
   const PARENTS_NAMES  = settings.parentsNames
   const PARTY_LOCATION = settings.partyLocation
@@ -80,6 +83,10 @@ export default function Home() {
           {settings.submissionsLocked ? (
             <div className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gray-100 text-gray-400 text-lg font-medium">
               🔒 Anmälan stängd
+            </div>
+          ) : alreadySubmitted ? (
+            <div className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-sage-100 text-sage-500 text-lg font-medium">
+              ✓ Din gissning är inne!
             </div>
           ) : (
             <Link to="/rsvp" className="btn-primary text-lg px-10 py-4">
