@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cream font-body text-gray-800 antialiased;
+  }
+
+  h1, h2, h3 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-8 py-3 rounded-full
+           bg-sage-300 text-white font-medium text-base
+           shadow-md hover:bg-sage-400 active:bg-sage-500
+           transition-all duration-200 hover:shadow-lg
+           focus:outline-none focus:ring-2 focus:ring-sage-300 focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-8 py-3 rounded-full
+           border-2 border-sage-200 text-sage-400 font-medium text-base
+           hover:bg-sage-50 active:bg-sage-100
+           transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-sage-200 focus:ring-offset-2;
+  }
+
+  .card {
+    @apply bg-white rounded-3xl shadow-sm border border-sun-100 p-6;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-2xl border border-sun-200
+           bg-white text-gray-700 placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-sage-200 focus:border-transparent
+           transition-all duration-200;
+  }
+
+  .gender-btn {
+    @apply flex flex-col items-center justify-center gap-2 p-6 rounded-3xl
+           border-2 font-medium text-lg cursor-pointer
+           transition-all duration-200 select-none;
+  }
+
+  .gender-btn-boy {
+    @apply border-blue-200 text-blue-400 hover:border-blue-300 hover:bg-blue-50;
+  }
+
+  .gender-btn-boy.selected {
+    @apply border-blue-400 bg-blue-50 text-blue-600 shadow-md;
+  }
+
+  .gender-btn-girl {
+    @apply border-pink-200 text-pink-400 hover:border-pink-300 hover:bg-pink-50;
+  }
+
+  .gender-btn-girl.selected {
+    @apply border-pink-400 bg-pink-50 text-pink-600 shadow-md;
+  }
+}

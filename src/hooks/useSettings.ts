@@ -1,0 +1,40 @@
+import { useState, useEffect } from 'react'
+import { doc, onSnapshot } from 'firebase/firestore'
+import { db } from '../firebase'
+
+export interface Settings {
+  gender: 'boy' | 'girl'
+  submissionsLocked: boolean
+  showTallyToGuests: boolean
+  parentsNames: string
+  partyDate: string
+  partyLocation: string
+  partyTime: string
+}
+
+export const DEFAULTS: Settings = {
+  gender: 'girl',
+  submissionsLocked: false,
+  showTallyToGuests: true,
+  parentsNames: 'Sara & Johan',
+  partyDate: '2026-07-19T14:00:00',
+  partyLocation: 'Trädgården, Rosgatan 12',
+  partyTime: 'Lördag 19 juli · 14:00',
+}
+
+export function useSettings(): { settings: Settings; loading: boolean } {
+  const [settings, setSettings] = useState<Settings>(DEFAULTS)
+  const [loading, setLoading]   = useState(true)
+
+  useEffect(() => {
+    const ref = doc(db, 'settings', 'config')
+    return onSnapshot(ref, snap => {
+      if (snap.exists()) {
+        setSettings({ ...DEFAULTS, ...snap.data() } as Settings)
+      }
+      setLoading(false)
+    })
+  }, [])
+
+  return { settings, loading }
+}
