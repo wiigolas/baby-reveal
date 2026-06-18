@@ -6,6 +6,84 @@ import { useSettings } from '../hooks/useSettings'
 interface RSVP {
   id: string
   gender: 'boy' | 'girl' | null
+  nameGuess: string
+}
+
+// ── Name cloud ────────────────────────────────────────────────────────────────
+function seededRandom(seed: string, offset: number) {
+  let h = offset * 2654435761
+  for (let i = 0; i < seed.length; i++) h ^= seed.charCodeAt(i) * (i + 1)
+  h = ((h >>> 16) ^ h) * 0x45d9f3b
+  h = ((h >>> 16) ^ h) * 0x45d9f3b
+  h = (h >>> 16) ^ h
+  return (h >>> 0) / 0xffffffff
+}
+
+interface NameItem { name: string; count: number }
+
+// Safe slots along the perimeter — avoids the center where main content lives
+const SLOTS = [
+  // Top strip
+  { x: 4, y: 4 }, { x: 20, y: 3 }, { x: 38, y: 5 }, { x: 55, y: 3 }, { x: 70, y: 5 }, { x: 84, y: 4 },
+  // Bottom strip
+  { x: 3, y: 84 }, { x: 18, y: 87 }, { x: 36, y: 84 }, { x: 53, y: 87 }, { x: 68, y: 84 }, { x: 82, y: 87 },
+  // Left strip
+  { x: 2, y: 22 }, { x: 3, y: 40 }, { x: 2, y: 58 }, { x: 3, y: 73 },
+  // Right strip
+  { x: 82, y: 22 }, { x: 83, y: 40 }, { x: 82, y: 58 }, { x: 83, y: 73 },
+]
+
+function NameCloud({ names, phase, isBoy }: {
+  names: NameItem[]
+  phase: 'waiting' | 'drumroll' | 'revealed'
+  isBoy: boolean
+}) {
+  if (names.length === 0) return null
+
+  const maxCount = Math.max(...names.map(n => n.count))
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      {names.map(({ name, count }, i) => {
+        const slot = SLOTS[i % SLOTS.length]
+        // Add a small jitter so names in the same slot don't stack perfectly
+        const jx = (seededRandom(name, 5) - 0.5) * 4
+        const jy = (seededRandom(name, 6) - 0.5) * 4
+        const x = slot.x + jx
+        const y = slot.y + jy
+        const rot = (seededRandom(name, 2) - 0.5) * 20
+        const size = 1.0 + (count / maxCount) * 1.6
+        const delay = seededRandom(name, 3) * 2
+
+        const colorClass = phase === 'revealed'
+          ? isBoy ? 'text-blue-300' : 'text-pink-300'
+          : 'text-white'
+
+        const opacity = phase === 'revealed'
+          ? 0.5 + (count / maxCount) * 0.35
+          : 0.4 + (count / maxCount) * 0.35
+
+        return (
+          <span
+            key={name}
+            className={`absolute font-display italic select-none transition-colors duration-1000 animate-float ${colorClass}`}
+            style={{
+              left: `${x}%`,
+              top: `${y}%`,
+              fontSize: `${size}rem`,
+              transform: `rotate(${rot}deg)`,
+              opacity,
+              animationDelay: `${delay}s`,
+              animationDuration: `${3 + seededRandom(name, 4) * 2}s`,
+              textShadow: '0 2px 8px rgba(0,0,0,0.3)',
+            }}
+          >
+            {name}
+          </span>
+        )
+      })}
+    </div>
+  )
 }
 
 // ── Confetti ─────────────────────────────────────────────────────────────────
@@ -64,8 +142,8 @@ function useConfetti(canvasRef: React.RefObject<HTMLCanvasElement>, active: bool
       particles.current = particles.current.filter(p => p.opacity > 0.05)
 
       particles.current.forEach(p => {
-        p.x  += p.vx
-        p.y  += p.vy
+        p.x += p.vx
+        p.y += p.vy
         p.vy += 0.12 // gravity
         p.rotation += p.rotationSpeed
         if (p.y > canvas!.height * 0.7) p.opacity -= 0.015
@@ -102,28 +180,40 @@ type Phase = 'waiting' | 'drumroll' | 'revealed'
 export default function Reveal() {
   const { settings } = useSettings()
   const ACTUAL_GENDER = settings.gender
-  const [rsvps, setRsvps]     = useState<RSVP[]>([])
-  const [phase, setPhase]     = useState<Phase>('waiting')
+  const [rsvps, setRsvps] = useState<RSVP[]>([])
+  const [phase, setPhase] = useState<Phase>('waiting')
   const [showTrigger, setShowTrigger] = useState(false)
   const [drumrollCount, setDrumrollCount] = useState(3)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useConfetti(canvasRef, phase === 'revealed', ACTUAL_GENDER)
 
-  // Live tally
+  // Live tally + name guesses
   useEffect(() => {
     const q = query(collection(db, 'rsvps'), orderBy('submittedAt', 'desc'))
     return onSnapshot(q, snap => {
-      setRsvps(snap.docs.map(d => ({ id: d.id, gender: d.data().gender ?? null })))
+      setRsvps(snap.docs.map(d => ({
+        id: d.id,
+        gender: d.data().gender ?? null,
+        nameGuess: d.data().nameGuess ?? '',
+      })))
     })
   }, [])
 
   const guesses = rsvps.filter(r => r.gender)
-  const boys    = guesses.filter(r => r.gender === 'boy').length
-  const girls   = guesses.filter(r => r.gender === 'girl').length
-  const total   = guesses.length
-  const boyPct  = total ? Math.round((boys / total) * 100) : 50
+  const boys = guesses.filter(r => r.gender === 'boy').length
+  const girls = guesses.filter(r => r.gender === 'girl').length
+  const total = guesses.length
+  const boyPct = total ? Math.round((boys / total) * 100) : 50
   const girlPct = total ? Math.round((girls / total) * 100) : 50
+
+  // Aggregate name guesses
+  const nameMap: Record<string, number> = {}
+  rsvps.forEach(r => {
+    const n = r.nameGuess?.trim()
+    if (n) nameMap[n] = (nameMap[n] ?? 0) + 1
+  })
+  const nameItems: NameItem[] = Object.entries(nameMap).map(([name, count]) => ({ name, count }))
 
   function triggerReveal() {
     if (phase !== 'waiting') return
@@ -139,7 +229,7 @@ export default function Reveal() {
     }, 800)
   }
 
-  const isBoy  = ACTUAL_GENDER === 'boy'
+  const isBoy = ACTUAL_GENDER === 'boy'
   const bgClass = phase === 'revealed'
     ? isBoy ? 'bg-blue-100' : 'bg-pink-100'
     : 'bg-[#1a1025]'
@@ -153,6 +243,9 @@ export default function Reveal() {
         setShowTrigger(nearCorner)
       }}
     >
+      {/* Name cloud */}
+      <NameCloud names={nameItems} phase={phase} isBoy={isBoy} />
+
       {/* Confetti canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-20" />
 
@@ -203,10 +296,10 @@ export default function Reveal() {
         <div className="text-center z-10 space-y-6 px-8">
           <div className="animate-slide-up">
             <p className={`text-sm uppercase tracking-[0.4em] mb-4 font-body ${isBoy ? 'text-blue-400' : 'text-pink-400'}`}>
-              Det blir…
+              Det blir en…
             </p>
             <h1 className={`font-display font-bold leading-none ${isBoy ? 'text-blue-600' : 'text-pink-500'}`}
-                style={{ fontSize: 'clamp(5rem, 20vw, 14rem)' }}>
+              style={{ fontSize: 'clamp(5rem, 20vw, 14rem)' }}>
               {isBoy ? 'POJKE' : 'FLICKA'}
             </h1>
             <div className="text-8xl mt-4 animate-float">
@@ -214,7 +307,7 @@ export default function Reveal() {
             </div>
           </div>
           <p className={`font-display italic text-2xl ${isBoy ? 'text-blue-500' : 'text-pink-400'} animate-fade-in`}
-             style={{ animationDelay: '0.5s', opacity: 0 }}>
+            style={{ animationDelay: '0.5s', opacity: 0 }}>
             Grattis! 🎊
           </p>
         </div>
