@@ -23,12 +23,47 @@ const INITIAL: FormState = {
   message: '',
 }
 
+const STORAGE_KEY = 'baby_reveal_submitted'
+
+interface Submission {
+  name: string
+  gender: Gender
+  nameGuess: string
+  attending: Attending
+}
+
+function AlreadySubmitted({ submission }: { submission: Submission }) {
+  const genderText = submission.gender === 'boy' ? 'pojke' : submission.gender === 'girl' ? 'flicka' : null
+  const emoji = submission.gender === 'boy' ? '💙' : '💗'
+  return (
+    <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4 text-center">
+      <div className="text-6xl mb-4 animate-float">{emoji}</div>
+      <h1 className="font-display text-3xl text-gray-800 mb-2">Du har redan svarat, {submission.name}!</h1>
+      {genderText && (
+        <p className="text-gray-500 mb-1">Du gissade: <strong>{genderText}</strong></p>
+      )}
+      {submission.nameGuess && (
+        <p className="text-gray-500 mb-1">Namnsgissning: <strong>{submission.nameGuess}</strong></p>
+      )}
+      <p className="text-gray-400 text-sm mt-4 mb-8">Vi ses på festen! 🎊</p>
+      <Link to="/" className="btn-secondary">← Tillbaka till inbjudan</Link>
+    </div>
+  )
+}
+
 export default function RSVP() {
   const { settings, loading } = useSettings()
   const [form, setForm] = useState<FormState>(INITIAL)
   const [step, setStep] = useState<1 | 2>(1)
   const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
+
+  const existing = localStorage.getItem(STORAGE_KEY)
+  const previousSubmission: Submission | null = existing ? JSON.parse(existing) : null
+
+  if (previousSubmission) {
+    return <AlreadySubmitted submission={previousSubmission} />
+  }
 
   // Wait for settings to load before rendering anything — prevents flash of form when locked
   if (loading) {
@@ -75,6 +110,13 @@ export default function RSVP() {
       message:    form.message.trim(),
       submittedAt: serverTimestamp(),
     })
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      name:      form.name.trim(),
+      gender:    form.gender,
+      nameGuess: form.nameGuess.trim(),
+      attending: form.attending,
+    }))
 
     setSubmitting(false)
     navigate('/thanks', { state: { name: form.name, gender: form.gender } })
