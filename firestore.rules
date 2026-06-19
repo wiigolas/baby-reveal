@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Anyone can read/write RSVPs (no auth needed for a party app)
+    match /rsvps/{doc} {
+      allow read, write: if true;
+    }
+
+    // Anyone can read settings; anyone can write (admin uses password in UI, not Firebase auth)
+    match /settings/{doc} {
+      allow read, write: if true;
+    }
+  }
+}

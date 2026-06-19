@@ -191,13 +191,17 @@ export default function Reveal() {
   // Live tally + name guesses
   useEffect(() => {
     const q = query(collection(db, 'rsvps'), orderBy('submittedAt', 'desc'))
-    return onSnapshot(q, snap => {
-      setRsvps(snap.docs.map(d => ({
-        id: d.id,
-        gender: d.data().gender ?? null,
-        nameGuess: d.data().nameGuess ?? '',
-      })))
-    })
+    return onSnapshot(
+      q,
+      snap => {
+        setRsvps(snap.docs.map(d => ({
+          id: d.id,
+          gender: d.data().gender ?? null,
+          nameGuess: d.data().nameGuess ?? '',
+        })))
+      },
+      err => console.error('[Reveal] Firestore error:', err.code, err.message)
+    )
   }, [])
 
   const guesses = rsvps.filter(r => r.gender)

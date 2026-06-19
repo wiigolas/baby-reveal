@@ -14,13 +14,17 @@ export default function Thanks() {
   const [girls, setGirls] = useState(0)
 
   useEffect(() => {
-    if (!settings.showTallyToGuests) return
-    return onSnapshot(query(collection(db, 'rsvps')), snap => {
-      const guesses = snap.docs.map(d => d.data().gender).filter(Boolean)
-      setBoys(guesses.filter(g => g === 'boy').length)
-      setGirls(guesses.filter(g => g === 'girl').length)
-    })
-  }, [settings.showTallyToGuests])
+    const unsub = onSnapshot(
+      query(collection(db, 'rsvps')),
+      snap => {
+        const guesses = snap.docs.map(d => d.data().gender).filter(Boolean)
+        setBoys(guesses.filter(g => g === 'boy').length)
+        setGirls(guesses.filter(g => g === 'girl').length)
+      },
+      err => console.error('[Thanks] Firestore error:', err.code, err.message)
+    )
+    return unsub
+  }, []) // always listen; showTallyToGuests only controls rendering below
 
   const emoji = gender === 'boy' ? '💙' : gender === 'girl' ? '💗' : '✨'
   const genderText = gender === 'boy' ? 'en pojke' : gender === 'girl' ? 'en flicka' : 'en överraskning'

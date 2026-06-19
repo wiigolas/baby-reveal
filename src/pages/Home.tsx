@@ -6,7 +6,7 @@ const STORAGE_KEY = 'baby_reveal_submitted'
 
 const Petals = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
-    {['🌸','🌷','✨','🌸','💫','🌷','✨','🌸'].map((emoji, i) => (
+    {['🌸', '🌷', '✨', '🌸', '💫', '🌷', '✨', '🌸'].map((emoji, i) => (
       <span
         key={i}
         className="absolute text-2xl opacity-30 animate-float"
@@ -26,10 +26,10 @@ const Petals = () => (
 export default function Home() {
   const { settings } = useSettings()
   const alreadySubmitted = !!localStorage.getItem(STORAGE_KEY)
-  const PARTY_DATE     = new Date(settings.partyDate)
-  const PARENTS_NAMES  = settings.parentsNames
+  const PARTY_DATE = new Date(settings.partyDate)
+  const PARENTS_NAMES = settings.parentsNames
   const PARTY_LOCATION = settings.partyLocation
-  const PARTY_TIME     = settings.partyTime
+  const PARTY_TIME = settings.partyTime
 
   return (
     <div className="min-h-screen bg-cream relative flex flex-col">
@@ -48,7 +48,7 @@ export default function Home() {
         {/* Headline */}
         <div className="animate-slide-up" style={{ animationDelay: '0.1s', opacity: 0 }}>
           <h1 className="font-display text-5xl sm:text-6xl md:text-7xl text-gray-800 leading-tight mb-2">
-            Baby Reveal
+            Gender Reveal
           </h1>
           <p className="font-display italic text-2xl sm:text-3xl text-sage-400 mb-6">
             för {PARENTS_NAMES}
@@ -73,7 +73,7 @@ export default function Home() {
         {/* Countdown */}
         <div className="animate-slide-up mb-12" style={{ animationDelay: '0.3s', opacity: 0 }}>
           <p className="text-sm text-gray-400 uppercase tracking-widest mb-4 font-body">
-            Det stora avslöjandet om
+            Nedräkning till avslöjandet
           </p>
           <Countdown targetDate={PARTY_DATE} />
         </div>
@@ -86,7 +86,7 @@ export default function Home() {
             </div>
           ) : alreadySubmitted ? (
             <div className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-sage-100 text-sage-500 text-lg font-medium">
-              ✓ Din gissning är inne!
+              ✓ Du har gissat!
             </div>
           ) : (
             <Link to="/rsvp" className="btn-primary text-lg px-10 py-4">
@@ -97,7 +97,7 @@ export default function Home() {
 
         {/* Soft note */}
         <p className="mt-8 text-sm text-gray-400 animate-fade-in" style={{ animationDelay: '0.6s', opacity: 0 }}>
-          Skicka din könsgissning, gissa ett namn och lämna ett meddelande till föräldrarna 💌
+          Skicka din gissning, gissa ett namn och lämna ett meddelande till föräldrarna 💌
         </p>
       </main>
 
