@@ -57,29 +57,50 @@ const SLOTS: Slot[] = [
   { x:  3, y: 50, anchor: 'left'   },
 ]
 
-function NameCloud({ names, phase, isBoy }: {
+interface Exclusion { top: number; left: number; bottom: number; right: number }
+
+function NameCloud({ names, phase, isBoy, exclusion }: {
   names: NameItem[]
   phase: 'waiting' | 'drumroll' | 'revealed'
   isBoy: boolean
+  exclusion: Exclusion
 }) {
   if (names.length === 0) return null
 
   const maxCount = Math.max(...names.map(n => n.count))
-  // Sort by count desc so popular names land in the inner (more visible) slots
   const sorted = [...names].sort((a, b) => b.count - a.count)
 
   const colorClass = phase === 'revealed'
     ? isBoy ? 'text-blue-300' : 'text-pink-300'
     : 'text-white'
 
+  // SVG clip-path with a rectangular hole exactly over the center content
+  // Coordinates are 0–1 fractions (objectBoundingBox units)
+  const pad = 0.04 // small padding around the exclusion zone
+  const ex = {
+    t: Math.max(0, exclusion.top   / 100 - pad),
+    l: Math.max(0, exclusion.left  / 100 - pad),
+    b: Math.min(1, exclusion.bottom / 100 + pad),
+    r: Math.min(1, exclusion.right  / 100 + pad),
+  }
+  // Outer rect (full area) + inner rect (hole) with evenodd fill rule
+  const holePath =
+    `M0,0 L1,0 L1,1 L0,1 Z ` +
+    `M${ex.l},${ex.t} L${ex.r},${ex.t} L${ex.r},${ex.b} L${ex.l},${ex.b} Z`
+
   return (
-    <div
-      className="absolute inset-0 overflow-hidden pointer-events-none z-0"
-      style={{
-        WebkitMaskImage: 'radial-gradient(ellipse 42% 32% at 50% 50%, transparent 55%, black 88%)',
-        maskImage: 'radial-gradient(ellipse 42% 32% at 50% 50%, transparent 55%, black 88%)',
-      }}
-    >
+    <>
+      <svg width="0" height="0" style={{ position: 'absolute' }}>
+        <defs>
+          <clipPath id="nc-hole" clipPathUnits="objectBoundingBox">
+            <path fillRule="evenodd" d={holePath} />
+          </clipPath>
+        </defs>
+      </svg>
+      <div
+        className="absolute inset-0 overflow-hidden pointer-events-none z-0"
+        style={{ clipPath: 'url(#nc-hole)' }}
+      >
       {sorted.map((item, i) => {
         const slot  = SLOTS[i % SLOTS.length]
         const rot   = (seededRandom(item.name, 2) - 0.5) * 18
@@ -120,7 +141,8 @@ function NameCloud({ names, phase, isBoy }: {
           </span>
         )
       })}
-    </div>
+      </div>
+    </>
   )
 }
 
@@ -225,6 +247,29 @@ export default function Reveal() {
   const [pwInput, setPwInput] = useState('')
   const [pwError, setPwError] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const centerRef = useRef<HTMLDivElement>(null)
+  const [exclusion, setExclusion] = useState<Exclusion>({ top: 25, left: 10, bottom: 75, right: 90 })
+
+  // Measure center content bounding box so the name cloud can avoid it
+  useEffect(() => {
+    function measure() {
+      const el = centerRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      setExclusion({
+        top:    (rect.top    / vh) * 100,
+        left:   (rect.left   / vw) * 100,
+        bottom: (rect.bottom / vh) * 100,
+        right:  (rect.right  / vw) * 100,
+      })
+    }
+    // Small delay to let layout settle after phase change
+    const t = setTimeout(measure, 50)
+    window.addEventListener('resize', measure)
+    return () => { clearTimeout(t); window.removeEventListener('resize', measure) }
+  }, [phase])
 
   useConfetti(canvasRef, phase === 'revealed', ACTUAL_GENDER)
 
@@ -300,23 +345,25 @@ export default function Reveal() {
 
   return (
     <div
-      className={`flex flex-col items-center justify-center relative overflow-hidden transition-colors duration-1000 ${bgClass}`}
-      style={{ height: '100dvh' }}
+      className={`fixed inset-0 flex flex-col items-center justify-center overflow-hidden transition-colors duration-1000 ${bgClass}`}
       // Reveal trigger: hover bottom-right corner
       onMouseMove={e => {
         const nearCorner = e.clientX > window.innerWidth - 80 && e.clientY > window.innerHeight - 80
         setShowTrigger(nearCorner)
       }}
     >
-      {/* Name cloud */}
-      <NameCloud names={nameItems} phase={phase} isBoy={isBoy} />
+      {/* Name cloud — clip-path avoids center content */}
+      <NameCloud names={nameItems} phase={phase} isBoy={isBoy} exclusion={exclusion} />
 
       {/* Confetti canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-20" />
 
+      {/* Phase content — ref used to measure exclusion zone for name cloud */}
+      <div ref={centerRef} className="z-10 w-full flex flex-col items-center">
+
       {/* ── WAITING phase ── */}
       {phase === 'waiting' && (
-        <div className="text-center space-y-8 px-6 animate-fade-in z-10 w-full max-w-lg mx-auto">
+        <div className="text-center space-y-8 px-6 animate-fade-in w-full max-w-lg mx-auto">
           <div>
             <p className="text-white/50 text-xs sm:text-sm uppercase tracking-[0.3em] mb-3 font-body">Tror ni att det blir en</p>
             <h1
@@ -375,6 +422,8 @@ export default function Reveal() {
           </div>
         </div>
       )}
+
+      </div>{/* end centerRef wrapper */}
 
       {/* Hidden admin trigger — only visible when hovering bottom-right corner */}
       {phase === 'waiting' && showTrigger && (
