@@ -15,6 +15,14 @@ interface RSVP {
   gender: 'boy' | 'girl'
   nameGuess: string
   message: string
+  dietary: 'yes' | 'no' | null
+  dietaryDetails: string
+  guessDate: string
+  guessTime: string
+  guessWeight: string
+  guessLength: string
+  guessEyeColor: string
+  guessHairColor: string
   submittedAt: { seconds: number } | null
 }
 
@@ -74,7 +82,8 @@ export default function Admin() {
   const [error, setError] = useState(false)
   const [rsvps, setRsvps] = useState<RSVP[]>([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'overview' | 'guests' | 'names' | 'messages' | 'settings'>('overview')
+  const [tab, setTab] = useState<'overview' | 'guests' | 'names' | 'messages' | 'baby' | 'settings'>('overview')
+  const [guestFilter, setGuestFilter] = useState<'all' | 'yes' | 'no'>('all')
   const { settings } = useSettings()
   const [draft, setDraft]       = useState<Settings>(DEFAULTS)
   const [saving, setSaving]     = useState(false)
@@ -155,6 +164,7 @@ export default function Admin() {
     { id: 'guests',    label: `👥 Gäster (${rsvps.length})` },
     { id: 'names',     label: `✏️ Namn (${nameGuesses.length})` },
     { id: 'messages',  label: `💌 Meddelanden (${messages.length})` },
+    { id: 'baby',      label: '👶 Babydata' },
     { id: 'settings',  label: '⚙️ Inställningar' },
   ] as const
 
@@ -212,10 +222,29 @@ export default function Admin() {
             {/* Guests */}
             {tab === 'guests' && (
               <div className="space-y-3 animate-fade-in">
+                <div className="flex gap-2">
+                  {[
+                    { key: 'all',  label: `Alla (${rsvps.length})` },
+                    { key: 'yes',  label: `Kommer (${attending.length})` },
+                    { key: 'no',   label: `Kommer inte (${declined.length})` },
+                  ].map(t => (
+                    <button
+                      key={t.key}
+                      onClick={() => setGuestFilter(t.key as 'all' | 'yes' | 'no')}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                        guestFilter === t.key
+                          ? 'bg-sage-300 text-white'
+                          : 'bg-white text-gray-500 border border-sun-100 hover:border-sage-200'
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
                 {rsvps.length === 0 && (
                   <p className="text-center text-gray-400 py-10">Inga OSA än</p>
                 )}
-                {rsvps.map(r => (
+                {rsvps.filter(r => guestFilter === 'all' || r.attending === guestFilter).map(r => (
                   <div key={r.id} className="card flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -239,6 +268,9 @@ export default function Admin() {
                       </div>
                       {r.nameGuess && (
                         <p className="text-sm text-gray-500 mt-1">Namnsgissning: <em>{r.nameGuess}</em></p>
+                      )}
+                      {r.dietary === 'yes' && (
+                        <p className="text-sm text-orange-500 mt-1">⚠️ Allergi/specialkost: <em>{r.dietaryDetails || '—'}</em></p>
                       )}
                     </div>
                     <span className="text-xs text-gray-300 flex-shrink-0">{formatDate(r.submittedAt)}</span>
@@ -277,6 +309,69 @@ export default function Admin() {
                   <div key={r.id} className="card">
                     <p className="text-gray-700 italic">"{r.message}"</p>
                     <p className="text-sm text-gray-400 mt-2">— {r.name}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Baby data */}
+            {tab === 'baby' && (
+              <div className="space-y-4 animate-fade-in">
+                {rsvps.filter(r =>
+                  r.guessDate || r.guessTime || r.guessWeight || r.guessLength || r.guessEyeColor || r.guessHairColor
+                ).length === 0 && (
+                  <p className="text-center text-gray-400 py-10">Inga babygissningar än</p>
+                )}
+                {rsvps.filter(r =>
+                  r.guessDate || r.guessTime || r.guessWeight || r.guessLength || r.guessEyeColor || r.guessHairColor
+                ).map(r => (
+                  <div key={r.id} className="card space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-gray-800">{r.name}</p>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        r.gender === 'boy' ? 'bg-blue-100 text-blue-500' : 'bg-pink-100 text-pink-500'
+                      }`}>
+                        Gissar {r.gender === 'boy' ? 'pojke' : 'flicka'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
+                      {r.guessDate && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">📅 Datum</span>
+                          <span className="text-gray-700 font-medium">{r.guessDate}</span>
+                        </div>
+                      )}
+                      {r.guessTime && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">🕐 Tid</span>
+                          <span className="text-gray-700 font-medium">{r.guessTime}</span>
+                        </div>
+                      )}
+                      {r.guessWeight && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">⚖️ Vikt</span>
+                          <span className="text-gray-700 font-medium">{r.guessWeight} g</span>
+                        </div>
+                      )}
+                      {r.guessLength && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">📏 Längd</span>
+                          <span className="text-gray-700 font-medium">{r.guessLength} cm</span>
+                        </div>
+                      )}
+                      {r.guessEyeColor && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">👁️ Ögonfärg</span>
+                          <span className="text-gray-700 font-medium">{r.guessEyeColor}</span>
+                        </div>
+                      )}
+                      {r.guessHairColor && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">💇 Hårfärg</span>
+                          <span className="text-gray-700 font-medium">{r.guessHairColor}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
