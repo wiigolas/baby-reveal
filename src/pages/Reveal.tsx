@@ -379,6 +379,7 @@ export default function Reveal() {
         >
           <input
             type="password"
+                autoComplete="new-password"
             placeholder="Lösenord"
             value={pwInput}
             onChange={e => setPwInput(e.target.value)}
