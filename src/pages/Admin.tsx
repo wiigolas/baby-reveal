@@ -8,7 +8,7 @@ import { useSettings, DEFAULTS, type Settings } from '../hooks/useSettings'
 const ADMIN_PASSWORD = 'babyreveal2026'
 // ────────────────────────────────────────────────────────────────────────────
 
-const EYE_COLORS  = ['Blå', 'Grön', 'Brun', 'Grå', 'Hasselnöt']
+const EYE_COLORS = ['Blå', 'Grön', 'Brun', 'Grå', 'Hasselnöt']
 const HAIR_COLORS = ['Blond', 'Brun', 'Svart', 'Röd', 'Lite hår']
 
 interface RSVP {
@@ -38,7 +38,7 @@ function formatDate(ts: { seconds: number } | null) {
 
 function GenderBar({ rsvps }: { rsvps: RSVP[] }) {
   const guesses = rsvps.filter(r => r.gender)
-  const boys  = guesses.filter(r => r.gender === 'boy').length
+  const boys = guesses.filter(r => r.gender === 'boy').length
   const girls = guesses.filter(r => r.gender === 'girl').length
   const total = guesses.length
 
@@ -46,7 +46,7 @@ function GenderBar({ rsvps }: { rsvps: RSVP[] }) {
     <p className="text-gray-400 text-sm">Inga gissningar än</p>
   )
 
-  const boyPct  = Math.round((boys  / total) * 100)
+  const boyPct = Math.round((boys / total) * 100)
   const girlPct = Math.round((girls / total) * 100)
 
   return (
@@ -88,9 +88,9 @@ export default function Admin() {
   const [tab, setTab] = useState<'overview' | 'guests' | 'names' | 'messages' | 'baby' | 'settings'>('overview')
   const [guestFilter, setGuestFilter] = useState<'all' | 'yes' | 'no'>('all')
   const { settings } = useSettings()
-  const [draft, setDraft]       = useState<Settings>(DEFAULTS)
-  const [saving, setSaving]     = useState(false)
-  const [saved, setSaved]       = useState(false)
+  const [draft, setDraft] = useState<Settings>(DEFAULTS)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   useEffect(() => { setDraft(settings) }, [settings])
 
@@ -157,18 +157,18 @@ export default function Admin() {
     )
   }
 
-  const attending  = rsvps.filter(r => r.attending === 'yes')
-  const declined   = rsvps.filter(r => r.attending === 'no')
+  const attending = rsvps.filter(r => r.attending === 'yes')
+  const declined = rsvps.filter(r => r.attending === 'no')
   const nameGuesses = rsvps.filter(r => r.nameGuess?.trim())
-  const messages   = rsvps.filter(r => r.message?.trim())
+  const messages = rsvps.filter(r => r.message?.trim())
 
   const tabs = [
-    { id: 'overview',  label: '📊 Översikt' },
-    { id: 'guests',    label: `👥 Gäster (${rsvps.length})` },
-    { id: 'names',     label: `✏️ Namn (${nameGuesses.length})` },
-    { id: 'messages',  label: `💌 Meddelanden (${messages.length})` },
-    { id: 'baby',      label: '👶 Babydata' },
-    { id: 'settings',  label: '⚙️ Inställningar' },
+    { id: 'overview', label: '📊 Översikt' },
+    { id: 'guests', label: `👥 Gäster (${rsvps.length})` },
+    { id: 'names', label: `✏️ Namn (${nameGuesses.length})` },
+    { id: 'messages', label: `💌 Meddelanden (${messages.length})` },
+    { id: 'baby', label: '👶 Babydata' },
+    { id: 'settings', label: '⚙️ Inställningar' },
   ] as const
 
   return (
@@ -196,11 +196,10 @@ export default function Admin() {
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
-                  className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    tab === t.id
+                  className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === t.id
                       ? 'bg-sage-300 text-white shadow-sm'
                       : 'bg-white text-gray-500 border border-sun-100 hover:border-sage-200'
-                  }`}
+                    }`}
                 >
                   {t.label}
                 </button>
@@ -211,9 +210,9 @@ export default function Admin() {
             {tab === 'overview' && (
               <div className="space-y-6 animate-fade-in">
                 <div className="grid grid-cols-3 gap-3">
-                  <StatCard label="Kommer"       value={attending.length} emoji="🎉" />
-                  <StatCard label="Kan inte"     value={declined.length} emoji="😢" />
-                  <StatCard label="Totalt"        value={rsvps.length}   emoji="📋" />
+                  <StatCard label="Kommer" value={attending.length} emoji="🎉" />
+                  <StatCard label="Kan inte" value={declined.length} emoji="😢" />
+                  <StatCard label="Totalt" value={rsvps.length} emoji="📋" />
                 </div>
                 <div className="card space-y-4">
                   <h2 className="font-display text-lg text-gray-700">Könsgissningar</h2>
@@ -227,44 +226,41 @@ export default function Admin() {
               <div className="space-y-3 animate-fade-in">
                 <div className="flex gap-2">
                   {[
-                    { key: 'all',  label: `Alla (${rsvps.length})` },
-                    { key: 'yes',  label: `Kommer (${attending.length})` },
-                    { key: 'no',   label: `Kommer inte (${declined.length})` },
+                    { key: 'all', label: `Alla (${rsvps.length})` },
+                    { key: 'yes', label: `Kommer (${attending.length})` },
+                    { key: 'no', label: `Kommer inte (${declined.length})` },
                   ].map(t => (
                     <button
                       key={t.key}
                       onClick={() => setGuestFilter(t.key as 'all' | 'yes' | 'no')}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                        guestFilter === t.key
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${guestFilter === t.key
                           ? 'bg-sage-300 text-white'
                           : 'bg-white text-gray-500 border border-sun-100 hover:border-sage-200'
-                      }`}
+                        }`}
                     >
                       {t.label}
                     </button>
                   ))}
                 </div>
                 {rsvps.length === 0 && (
-                  <p className="text-center text-gray-400 py-10">Inga OSA än</p>
+                  <p className="text-center text-gray-400 py-10">Inga O.S.A än</p>
                 )}
                 {rsvps.filter(r => guestFilter === 'all' || r.attending === guestFilter).map(r => (
                   <div key={r.id} className="card flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium text-gray-800">{r.name}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                          r.attending === 'yes'
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.attending === 'yes'
                             ? 'bg-green-100 text-green-600'
                             : 'bg-gray-100 text-gray-500'
-                        }`}>
+                          }`}>
                           {r.attending === 'yes' ? 'Kommer' : 'Tackat nej'}
                         </span>
                         {r.gender && (
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                            r.gender === 'boy'
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.gender === 'boy'
                               ? 'bg-blue-100 text-blue-500'
                               : 'bg-pink-100 text-pink-500'
-                          }`}>
+                            }`}>
                             Gissar {r.gender === 'boy' ? 'pojke' : 'flicka'}
                           </span>
                         )}
@@ -350,13 +346,13 @@ export default function Admin() {
               }
 
               const act = settings
-              const genderW = closestWinners('gender',         act.gender,          'exact')
-              const dateW   = closestWinners('guessDate',      act.actualDate,      'date')
-              const timeW   = closestWinners('guessTime',      act.actualTime,      'time')
-              const weightW = closestWinners('guessWeight',    act.actualWeight,    'numeric')
-              const lengthW = closestWinners('guessLength',    act.actualLength,    'numeric')
-              const eyeW    = closestWinners('guessEyeColor',  act.actualEyeColor,  'exact')
-              const hairW   = closestWinners('guessHairColor', act.actualHairColor, 'exact')
+              const genderW = closestWinners('gender', act.gender, 'exact')
+              const dateW = closestWinners('guessDate', act.actualDate, 'date')
+              const timeW = closestWinners('guessTime', act.actualTime, 'time')
+              const weightW = closestWinners('guessWeight', act.actualWeight, 'numeric')
+              const lengthW = closestWinners('guessLength', act.actualLength, 'numeric')
+              const eyeW = closestWinners('guessEyeColor', act.actualEyeColor, 'exact')
+              const hairW = closestWinners('guessHairColor', act.actualHairColor, 'exact')
 
               const hasActuals = !!(act.actualDate || act.actualTime || act.actualWeight || act.actualLength || act.actualEyeColor || act.actualHairColor)
 
@@ -369,13 +365,13 @@ export default function Admin() {
                 .sort((a, b) => score(b.id) - score(a.id))
 
               const fields: { key: keyof RSVP; label: string; unit?: string; winners: Set<string>; actual: string; format?: (v: string) => string }[] = [
-                { key: 'gender',         label: '👶 Kön',        winners: genderW, actual: act.gender, format: v => v === 'boy' ? 'Pojke' : 'Flicka' },
-                { key: 'guessDate',      label: '📅 Datum',      winners: dateW,   actual: act.actualDate },
-                { key: 'guessTime',      label: '🕐 Tid',        winners: timeW,   actual: act.actualTime },
-                { key: 'guessWeight',    label: '⚖️ Vikt',       unit: 'g',  winners: weightW, actual: act.actualWeight },
-                { key: 'guessLength',    label: '📏 Längd',      unit: 'cm', winners: lengthW, actual: act.actualLength },
-                { key: 'guessEyeColor',  label: '👁️ Ögonfärg',  winners: eyeW,    actual: act.actualEyeColor },
-                { key: 'guessHairColor', label: '💇 Hårfärg',   winners: hairW,   actual: act.actualHairColor },
+                { key: 'gender', label: '👶 Kön', winners: genderW, actual: act.gender, format: v => v === 'boy' ? 'Pojke' : 'Flicka' },
+                { key: 'guessDate', label: '📅 Datum', winners: dateW, actual: act.actualDate },
+                { key: 'guessTime', label: '🕐 Tid', winners: timeW, actual: act.actualTime },
+                { key: 'guessWeight', label: '⚖️ Vikt', unit: 'g', winners: weightW, actual: act.actualWeight },
+                { key: 'guessLength', label: '📏 Längd', unit: 'cm', winners: lengthW, actual: act.actualLength },
+                { key: 'guessEyeColor', label: '👁️ Ögonfärg', winners: eyeW, actual: act.actualEyeColor },
+                { key: 'guessHairColor', label: '💇 Hårfärg', winners: hairW, actual: act.actualHairColor },
               ]
 
               return (
@@ -392,20 +388,18 @@ export default function Admin() {
                           <div className="flex items-center gap-2">
                             {hasActuals && i === 0 && s > 0 && <span className="text-lg">🏆</span>}
                             <p className="font-medium text-gray-800">{r.name}</p>
-                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                              r.gender === 'boy' ? 'bg-blue-100 text-blue-500' : 'bg-pink-100 text-pink-500'
-                            }`}>
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.gender === 'boy' ? 'bg-blue-100 text-blue-500' : 'bg-pink-100 text-pink-500'
+                              }`}>
                               {r.gender === 'boy' ? 'pojke' : 'flicka'}
                             </span>
                           </div>
                           {hasActuals && (
-                            <span className={`text-sm font-semibold px-2 py-0.5 rounded-full ${
-                              s === maxFields && s > 0
+                            <span className={`text-sm font-semibold px-2 py-0.5 rounded-full ${s === maxFields && s > 0
                                 ? 'bg-green-100 text-green-600'
                                 : s > 0
                                   ? 'bg-sun-100 text-gray-600'
                                   : 'bg-gray-100 text-gray-400'
-                            }`}>
+                              }`}>
                               {s} / {maxFields} rätt
                             </span>
                           )}
@@ -452,13 +446,12 @@ export default function Admin() {
                         key={g}
                         type="button"
                         onClick={() => setDraft(d => ({ ...d, gender: g }))}
-                        className={`py-4 rounded-2xl border-2 font-medium text-base transition-all duration-200 ${
-                          draft.gender === g
+                        className={`py-4 rounded-2xl border-2 font-medium text-base transition-all duration-200 ${draft.gender === g
                             ? g === 'boy'
                               ? 'border-blue-400 bg-blue-50 text-blue-600 shadow-sm'
                               : 'border-pink-400 bg-pink-50 text-pink-600 shadow-sm'
                             : 'border-sun-100 text-gray-500 hover:border-sun-200'
-                        }`}
+                          }`}
                       >
                         {g === 'boy' ? '👦 Pojke' : '👧 Flicka'}
                       </button>
@@ -474,7 +467,7 @@ export default function Admin() {
                     {
                       key: 'submissionsLocked' as const,
                       label: 'Lås anmälningar',
-                      desc: 'Förhindra gäster från att skicka in OSA eller gissningar',
+                      desc: 'Förhindra gäster från att skicka in O.S.A eller gissningar',
                       icon: '🔒',
                     },
                     {
@@ -494,13 +487,11 @@ export default function Admin() {
                         />
                         <div
                           onClick={() => setDraft(d => ({ ...d, [key]: !d[key] }))}
-                          className={`w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer ${
-                            draft[key] ? 'bg-sage-300' : 'bg-gray-200'
-                          }`}
+                          className={`w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer ${draft[key] ? 'bg-sage-300' : 'bg-gray-200'
+                            }`}
                         >
-                          <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
-                            draft[key] ? 'translate-x-5' : 'translate-x-0'
-                          }`} />
+                          <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${draft[key] ? 'translate-x-5' : 'translate-x-0'
+                            }`} />
                         </div>
                       </div>
                       <div>
@@ -517,11 +508,11 @@ export default function Admin() {
                   <p className="text-sm text-gray-400">Visas på inbjudningssidan</p>
 
                   {[
-                    { key: 'parentsNames' as const,  label: 'Föräldrarnas namn', placeholder: 'Sara & Johan' },
-                    { key: 'partyTime'    as const,  label: 'Datum & tid',       placeholder: 'Lördag 19 juli · 14:00' },
-                    { key: 'partyDate'   as const,   label: 'Nedräkningsmål (ISO)', placeholder: '2026-07-19T14:00:00' },
-                    { key: 'partyLocation' as const, label: 'Plats',             placeholder: 'Trädgården, Rosgatan 12' },
-                    { key: 'dueDate'      as const,  label: 'Beräknat förlossningsdatum (BF)', placeholder: 't.ex. 15 september' },
+                    { key: 'parentsNames' as const, label: 'Föräldrarnas namn', placeholder: 'Sara & Johan' },
+                    { key: 'partyTime' as const, label: 'Datum & tid', placeholder: 'Lördag 19 juli · 14:00' },
+                    { key: 'partyDate' as const, label: 'Nedräkningsmål (ISO)', placeholder: '2026-07-19T14:00:00' },
+                    { key: 'partyLocation' as const, label: 'Plats', placeholder: 'Trädgården, Rosgatan 12' },
+                    { key: 'dueDate' as const, label: 'Beräknat förlossningsdatum (BF)', placeholder: 't.ex. 15 september' },
                   ].map(({ key, label, placeholder }) => (
                     <div key={key} className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">{label}</label>
@@ -579,11 +570,10 @@ export default function Admin() {
                       {EYE_COLORS.map(c => (
                         <button key={c} type="button"
                           onClick={() => setDraft(d => ({ ...d, actualEyeColor: d.actualEyeColor === c ? '' : c }))}
-                          className={`px-3 py-1.5 rounded-full text-sm border-2 transition-all ${
-                            draft.actualEyeColor === c
+                          className={`px-3 py-1.5 rounded-full text-sm border-2 transition-all ${draft.actualEyeColor === c
                               ? 'border-sage-300 bg-sage-50 text-sage-600 font-medium'
                               : 'border-sun-100 text-gray-500 hover:border-sun-200'
-                          }`}>
+                            }`}>
                           {c}
                         </button>
                       ))}
@@ -595,11 +585,10 @@ export default function Admin() {
                       {HAIR_COLORS.map(c => (
                         <button key={c} type="button"
                           onClick={() => setDraft(d => ({ ...d, actualHairColor: d.actualHairColor === c ? '' : c }))}
-                          className={`px-3 py-1.5 rounded-full text-sm border-2 transition-all ${
-                            draft.actualHairColor === c
+                          className={`px-3 py-1.5 rounded-full text-sm border-2 transition-all ${draft.actualHairColor === c
                               ? 'border-sage-300 bg-sage-50 text-sage-600 font-medium'
                               : 'border-sun-100 text-gray-500 hover:border-sun-200'
-                          }`}>
+                            }`}>
                           {c}
                         </button>
                       ))}

@@ -73,7 +73,7 @@ export default function Home() {
         {/* Countdown */}
         <div className="animate-slide-up mb-12" style={{ animationDelay: '0.3s', opacity: 0 }}>
           <p className="text-sm text-gray-400 uppercase tracking-widest mb-4 font-body">
-            Nedräkning till avslöjandet
+            Nedräkning till festen
           </p>
           <Countdown targetDate={PARTY_DATE} />
         </div>
@@ -90,7 +90,7 @@ export default function Home() {
             </div>
           ) : (
             <Link to="/rsvp" className="btn-primary text-lg px-10 py-4">
-              OSA &amp; Gissa ✨
+              O.S.A &amp; GISSA
             </Link>
           )}
         </div>

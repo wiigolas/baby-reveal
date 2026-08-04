@@ -9,7 +9,7 @@ function makeICS(partyDate: string, partyLocation: string, parentsNames: string)
   const fmt = (d: Date) =>
     `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`
   const start = new Date(partyDate)
-  const end   = new Date(start.getTime() + 3 * 60 * 60 * 1000)
+  const end = new Date(start.getTime() + 3 * 60 * 60 * 1000)
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -30,7 +30,7 @@ function googleCalendarUrl(partyDate: string, partyLocation: string, parentsName
   const fmt = (d: Date) =>
     `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`
   const start = new Date(partyDate)
-  const end   = new Date(start.getTime() + 3 * 60 * 60 * 1000)
+  const end = new Date(start.getTime() + 3 * 60 * 60 * 1000)
   const params = new URLSearchParams({
     action: 'TEMPLATE',
     text: `Gender Reveal – ${parentsNames}`,
@@ -67,18 +67,18 @@ export default function Thanks() {
   function handleAddToCalendar() {
     const ics = makeICS(settings.partyDate, settings.partyLocation, settings.parentsNames)
     const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href     = url
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
     a.download = 'gender-reveal.ics'
     a.click()
     URL.revokeObjectURL(url)
   }
 
-  const total   = boys + girls
-  const boyPct  = total ? Math.round((boys  / total) * 100) : 50
+  const total = boys + girls
+  const boyPct = total ? Math.round((boys / total) * 100) : 50
   const girlPct = total ? Math.round((girls / total) * 100) : 50
-  const emoji   = gender === 'boy' ? '💙' : gender === 'girl' ? '💗' : '✨'
+  const emoji = gender === 'boy' ? '💙' : gender === 'girl' ? '💗' : '✨'
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4 text-center">
@@ -91,7 +91,7 @@ export default function Thanks() {
       {attending === 'yes' && (
         <p className="text-gray-500 mb-4 animate-fade-in">
           Kom ihåg att komma klädd i{' '}
-          {gender === 'boy' ? '💙 blått!' : gender === 'girl' ? '💗 rosa!' : '💙 blått eller 💗 rosa!'}
+          {gender === 'boy' ? '💙 blått!' : gender === 'girl' ? '💗 rO.S.A!' : '💙 blått eller 💗 rO.S.A!'}
         </p>
       )}
 
