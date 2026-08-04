@@ -4,26 +4,6 @@ import { collection, onSnapshot, query } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useSettings } from '../hooks/useSettings'
 
-function makeICS(partyDate: string, partyLocation: string, parentsNames: string): string {
-  const pad = (n: number) => String(n).padStart(2, '0')
-  const fmt = (d: Date) =>
-    `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`
-  const start = new Date(partyDate)
-  const end = new Date(start.getTime() + 3 * 60 * 60 * 1000)
-  return [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Baby Reveal//EN',
-    'BEGIN:VEVENT',
-    `DTSTART:${fmt(start)}`,
-    `DTEND:${fmt(end)}`,
-    `SUMMARY:Gender Reveal – ${parentsNames}`,
-    `LOCATION:${partyLocation}`,
-    'DESCRIPTION:Du är inbjuden till ett gender reveal party!',
-    'END:VEVENT',
-    'END:VCALENDAR',
-  ].join('\r\n')
-}
 
 function googleCalendarUrl(partyDate: string, partyLocation: string, parentsNames: string): string {
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -64,18 +44,7 @@ export default function Thanks() {
     return unsub
   }, [])
 
-  function handleAddToCalendar() {
-    const ics = makeICS(settings.partyDate, settings.partyLocation, settings.parentsNames)
-    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'gender-reveal.ics'
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const total = boys + girls
+const total = boys + girls
   const boyPct = total ? Math.round((boys / total) * 100) : 50
   const girlPct = total ? Math.round((girls / total) * 100) : 50
   const emoji = gender === 'boy' ? '💙' : gender === 'girl' ? '💗' : '✨'
@@ -107,20 +76,14 @@ export default function Thanks() {
 
       {/* Add to calendar — only for attendees with a party date set */}
       {attending === 'yes' && settings.partyDate && (
-        <div className="flex flex-col sm:flex-row gap-2 mb-8 animate-fade-in" style={{ animationDelay: '0.35s', opacity: 0 }}>
-          <button
-            onClick={handleAddToCalendar}
-            className="btn-secondary flex items-center gap-2 justify-center"
-          >
-            📅 Lägg till i kalendern
-          </button>
+        <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.35s', opacity: 0 }}>
           <a
             href={googleCalendarUrl(settings.partyDate, settings.partyLocation, settings.parentsNames)}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-secondary flex items-center gap-2 justify-center"
           >
-            Google Kalender
+            📅 Lägg till i kalendern
           </a>
         </div>
       )}
