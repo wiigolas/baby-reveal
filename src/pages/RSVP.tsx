@@ -379,11 +379,11 @@ export default function RSVP() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-600">Vikt (gram) <span className="text-sage-400">*</span></label>
-                    <input type="number" className="input-field" placeholder="t.ex. 3500" min={500} max={6000} value={form.guessWeight} onChange={e => set('guessWeight', e.target.value)} />
+                    <input type="number" inputMode="numeric" className="input-field" placeholder="t.ex. 3500" min={500} max={6000} value={form.guessWeight} onChange={e => set('guessWeight', e.target.value)} />
                   </div>
                   <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-600">Längd (cm) <span className="text-sage-400">*</span></label>
-                    <input type="number" className="input-field" placeholder="t.ex. 50" min={30} max={65} value={form.guessLength} onChange={e => set('guessLength', e.target.value)} />
+                    <input type="number" inputMode="numeric" className="input-field" placeholder="t.ex. 50" min={30} max={65} value={form.guessLength} onChange={e => set('guessLength', e.target.value)} />
                   </div>
                 </div>
 
