@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
+import { collection, onSnapshot, orderBy, query, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useSettings } from '../hooks/useSettings'
 
@@ -175,18 +175,36 @@ function useConfetti(canvasRef: React.RefObject<HTMLCanvasElement>, active: bool
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-type Phase = 'waiting' | 'drumroll' | 'revealed'
-
 export default function Reveal() {
   const { settings } = useSettings()
   const ACTUAL_GENDER = settings.gender
+  // phase lives in Firestore so every viewer stays perfectly in sync
+  const phase = settings.revealPhase
+
   const [rsvps, setRsvps] = useState<RSVP[]>([])
-  const [phase, setPhase] = useState<Phase>('waiting')
   const [showTrigger, setShowTrigger] = useState(false)
   const [drumrollCount, setDrumrollCount] = useState(3)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useConfetti(canvasRef, phase === 'revealed', ACTUAL_GENDER)
+
+  // Local countdown animation — fires on every client when Firestore phase → 'drumroll'
+  useEffect(() => {
+    if (phase !== 'drumroll') return
+    setDrumrollCount(3)
+    let count = 3
+    const interval = setInterval(() => {
+      count--
+      setDrumrollCount(count)
+      if (count === 0) {
+        clearInterval(interval)
+        setTimeout(() => {
+          updateDoc(doc(db, 'settings', 'config'), { revealPhase: 'revealed' }).catch(console.error)
+        }, 600)
+      }
+    }, 800)
+    return () => clearInterval(interval)
+  }, [phase])
 
   // Live tally + name guesses
   useEffect(() => {
@@ -219,18 +237,10 @@ export default function Reveal() {
   })
   const nameItems: NameItem[] = Object.entries(nameMap).map(([name, count]) => ({ name, count }))
 
-  function triggerReveal() {
+  async function triggerReveal() {
     if (phase !== 'waiting') return
-    setPhase('drumroll')
-    let count = 3
-    const interval = setInterval(() => {
-      count--
-      setDrumrollCount(count)
-      if (count === 0) {
-        clearInterval(interval)
-        setTimeout(() => setPhase('revealed'), 600)
-      }
-    }, 800)
+    // One write to Firestore → all viewers see drumroll simultaneously
+    await updateDoc(doc(db, 'settings', 'config'), { revealPhase: 'drumroll' }).catch(console.error)
   }
 
   const isBoy = ACTUAL_GENDER === 'boy'

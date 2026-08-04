@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, onSnapshot, orderBy, query, doc, setDoc } from 'firebase/firestore'
+import { collection, onSnapshot, orderBy, query, doc, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { Link } from 'react-router-dom'
 import { useSettings, DEFAULTS, type Settings } from '../hooks/useSettings'
@@ -98,6 +98,10 @@ export default function Admin() {
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  async function resetReveal() {
+    await updateDoc(doc(db, 'settings', 'config'), { revealPhase: 'waiting' })
   }
 
   function login(e: React.FormEvent) {
@@ -373,6 +377,20 @@ export default function Admin() {
                       />
                     </div>
                   ))}
+                </div>
+
+                {/* Reveal control */}
+                <div className="card space-y-3">
+                  <h2 className="font-display text-lg text-gray-700">🎬 Avslöjningsskärmen</h2>
+                  <p className="text-sm text-gray-400">
+                    Nuvarande fas: <strong className="text-gray-600">{settings.revealPhase}</strong>
+                  </p>
+                  <button
+                    onClick={resetReveal}
+                    className="btn-secondary w-full"
+                  >
+                    ↺ Återställ till vänteskärm
+                  </button>
                 </div>
 
                 {/* Save button */}

@@ -10,6 +10,7 @@ export interface Settings {
   partyDate: string
   partyLocation: string
   partyTime: string
+  revealPhase: 'waiting' | 'drumroll' | 'revealed'
 }
 
 export const DEFAULTS: Settings = {
@@ -20,6 +21,7 @@ export const DEFAULTS: Settings = {
   partyDate: '2026-07-19T14:00:00',
   partyLocation: 'Trädgården, Rosgatan 12',
   partyTime: 'Lördag 19 juli · 14:00',
+  revealPhase: 'waiting',
 }
 
 export function useSettings(): { settings: Settings; loading: boolean } {
