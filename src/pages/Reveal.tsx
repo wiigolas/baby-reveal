@@ -73,7 +73,13 @@ function NameCloud({ names, phase, isBoy }: {
     : 'text-white'
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+    <div
+      className="absolute inset-0 overflow-hidden pointer-events-none z-0"
+      style={{
+        WebkitMaskImage: 'radial-gradient(ellipse 42% 32% at 50% 50%, transparent 55%, black 88%)',
+        maskImage: 'radial-gradient(ellipse 42% 32% at 50% 50%, transparent 55%, black 88%)',
+      }}
+    >
       {sorted.map((item, i) => {
         const slot  = SLOTS[i % SLOTS.length]
         const rot   = (seededRandom(item.name, 2) - 0.5) * 18
