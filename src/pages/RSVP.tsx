@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react'
+import { useState, useRef, FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../firebase'
@@ -77,6 +77,8 @@ export default function RSVP() {
   const [step, setStep] = useState<1 | 2>(1)
   const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
+  const dateRef = useRef<HTMLInputElement>(null)
+  const timeRef = useRef<HTMLInputElement>(null)
 
   const existing = localStorage.getItem(STORAGE_KEY)
   const previousSubmission: Submission | null = existing ? JSON.parse(existing) : null
@@ -240,8 +242,8 @@ export default function RSVP() {
                       type="button"
                       onClick={() => set('dietary', opt)}
                       className={`py-4 rounded-2xl border-2 font-medium text-base transition-all duration-200 ${form.dietary === opt
-                          ? 'border-sage-300 bg-sage-50 text-sage-500 shadow-sm'
-                          : 'border-sun-100 text-gray-500 hover:border-sun-200'
+                        ? 'border-sage-300 bg-sage-50 text-sage-500 shadow-sm'
+                        : 'border-sun-100 text-gray-500 hover:border-sun-200'
                         }`}
                     >
                       {opt === 'yes' ? 'Ja' : 'Nej'}
@@ -334,15 +336,42 @@ export default function RSVP() {
                   <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-600">
                       Födelsedatum <span className="text-sage-400">*</span>
-                      {settings.dueDate && (
-                        <span className="ml-2 font-normal text-gray-400">(BF: {settings.dueDate})</span>
-                      )}
+                      <br />
                     </label>
-                    <input type="date" className="input-field" value={form.guessDate} onChange={e => set('guessDate', e.target.value)} />
+                    <div className="relative">
+                      <div className="input-field cursor-pointer" onClick={() => dateRef.current?.showPicker?.()}>
+                        {form.guessDate
+                          ? new Date(form.guessDate + 'T12:00:00').toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', year: 'numeric' })
+                          : <span className="text-gray-400">Välj datum</span>}
+                      </div>
+                      <input
+                        ref={dateRef}
+                        type="date"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        value={form.guessDate}
+                        onChange={e => set('guessDate', e.target.value)}
+                        onClick={e => e.currentTarget.showPicker?.()}
+                      />
+                      {settings.dueDate && (
+                        <p className="text-xs text-gray-400 mt-1">BF: {settings.dueDate}</p>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-600">Klockslag <span className="text-sage-400">*</span></label>
-                    <input type="time" className="input-field" value={form.guessTime} onChange={e => set('guessTime', e.target.value)} />
+                    <div className="relative">
+                      <div className="input-field cursor-pointer" onClick={() => timeRef.current?.showPicker?.()}>
+                        {form.guessTime || <span className="text-gray-400">Välj tid</span>}
+                      </div>
+                      <input
+                        ref={timeRef}
+                        type="time"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        value={form.guessTime}
+                        onChange={e => set('guessTime', e.target.value)}
+                        onClick={e => e.currentTarget.showPicker?.()}
+                      />
+                    </div>
                   </div>
                 </div>
 

@@ -4,51 +4,13 @@ import { collection, onSnapshot, query } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useSettings } from '../hooks/useSettings'
 
-function makeICS(partyDate: string, partyLocation: string, parentsNames: string): string {
-  const pad = (n: number) => String(n).padStart(2, '0')
-  const fmt = (d: Date) =>
-    `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`
-  const start = new Date(partyDate)
-  const end   = new Date(start.getTime() + 3 * 60 * 60 * 1000)
-  return [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Baby Reveal//EN',
-    'BEGIN:VEVENT',
-    `DTSTART:${fmt(start)}`,
-    `DTEND:${fmt(end)}`,
-    `SUMMARY:Gender Reveal – ${parentsNames}`,
-    `LOCATION:${partyLocation}`,
-    'DESCRIPTION:Du är inbjuden till ett gender reveal party!',
-    'END:VEVENT',
-    'END:VCALENDAR',
-  ].join('\r\n')
-}
-
-function googleCalendarUrl(partyDate: string, partyLocation: string, parentsNames: string): string {
-  const pad = (n: number) => String(n).padStart(2, '0')
-  const fmt = (d: Date) =>
-    `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`
-  const start = new Date(partyDate)
-  const end   = new Date(start.getTime() + 3 * 60 * 60 * 1000)
-  const params = new URLSearchParams({
-    action: 'TEMPLATE',
-    text: `Gender Reveal – ${parentsNames}`,
-    dates: `${fmt(start)}/${fmt(end)}`,
-    details: 'Du är inbjuden till ett gender reveal party!',
-    location: partyLocation,
-  })
-  return `https://calendar.google.com/calendar/render?${params}`
-}
-
 export default function Thanks() {
   const { state } = useLocation()
   const name: string = state?.name ?? 'vän'
   const gender: 'boy' | 'girl' | null = state?.gender ?? null
-  const attending: 'yes' | 'no' = state?.attending ?? 'yes'
 
   const { settings } = useSettings()
-  const [boys, setBoys] = useState(0)
+  const [boys, setBoys]   = useState(0)
   const [girls, setGirls] = useState(0)
 
   useEffect(() => {
@@ -62,23 +24,13 @@ export default function Thanks() {
       err => console.error('[Thanks] Firestore error:', err.code, err.message)
     )
     return unsub
-  }, [])
+  }, []) // always listen; showTallyToGuests only controls rendering below
 
-  function handleAddToCalendar() {
-    const ics = makeICS(settings.partyDate, settings.partyLocation, settings.parentsNames)
-    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href     = url
-    a.download = 'gender-reveal.ics'
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const total   = boys + girls
+  const emoji = gender === 'boy' ? '💙' : gender === 'girl' ? '💗' : '✨'
+  const genderText = gender === 'boy' ? 'en pojke' : gender === 'girl' ? 'en flicka' : 'en överraskning'
+  const total = boys + girls
   const boyPct  = total ? Math.round((boys  / total) * 100) : 50
   const girlPct = total ? Math.round((girls / total) * 100) : 50
-  const emoji   = gender === 'boy' ? '💙' : gender === 'girl' ? '💗' : '✨'
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4 text-center">
@@ -87,45 +39,14 @@ export default function Thanks() {
       <h1 className="font-display text-4xl sm:text-5xl text-gray-800 mb-3 animate-slide-up">
         Tack, {name}!
       </h1>
+      <p className="text-gray-500 text-lg mb-2 animate-fade-in" style={{ animationDelay: '0.2s', opacity: 0 }}>
+        Din gissning är inne — du tror det blir {genderText}.
+      </p>
+      <p className="text-gray-400 mb-8 animate-fade-in" style={{ animationDelay: '0.3s', opacity: 0 }}>
+        Vi får veta på festen! 🎊
+      </p>
 
-      {attending === 'yes' && (
-        <p className="text-gray-500 mb-4 animate-fade-in">
-          Kom ihåg att komma klädd i{' '}
-          {gender === 'boy' ? '💙 blått!' : gender === 'girl' ? '💗 rosa!' : '💙 blått eller 💗 rosa!'}
-        </p>
-      )}
-
-      <br />
-
-      <Link
-        to="/reveal"
-        className="btn-primary text-lg px-8 py-4 mb-4 animate-fade-in"
-        style={{ animationDelay: '0.3s', opacity: 0 }}
-      >
-        Se alla gissningar ✨
-      </Link>
-
-      {/* Add to calendar — only for attendees with a party date set */}
-      {attending === 'yes' && settings.partyDate && (
-        <div className="flex flex-col sm:flex-row gap-2 mb-8 animate-fade-in" style={{ animationDelay: '0.35s', opacity: 0 }}>
-          <button
-            onClick={handleAddToCalendar}
-            className="btn-secondary flex items-center gap-2 justify-center"
-          >
-            📅 Lägg till i kalendern
-          </button>
-          <a
-            href={googleCalendarUrl(settings.partyDate, settings.partyLocation, settings.parentsNames)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-secondary flex items-center gap-2 justify-center"
-          >
-            Google Kalender
-          </a>
-        </div>
-      )}
-
-      {/* Live tally */}
+      {/* Live tally — only shown when setting is on */}
       {settings.showTallyToGuests && total > 0 && (
         <div className="card w-full max-w-xs mb-8 animate-fade-in" style={{ animationDelay: '0.4s', opacity: 0 }}>
           <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">Så här gissar alla</p>

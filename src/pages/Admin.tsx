@@ -350,7 +350,6 @@ export default function Admin() {
               }
 
               const act = settings
-              const genderW = closestWinners('gender',         act.gender,          'exact')
               const dateW   = closestWinners('guessDate',      act.actualDate,      'date')
               const timeW   = closestWinners('guessTime',      act.actualTime,      'time')
               const weightW = closestWinners('guessWeight',    act.actualWeight,    'numeric')
@@ -361,21 +360,20 @@ export default function Admin() {
               const hasActuals = !!(act.actualDate || act.actualTime || act.actualWeight || act.actualLength || act.actualEyeColor || act.actualHairColor)
 
               const score = (id: string) =>
-                [genderW, dateW, timeW, weightW, lengthW, eyeW, hairW].filter(s => s.has(id)).length
+                [dateW, timeW, weightW, lengthW, eyeW, hairW].filter(s => s.has(id)).length
 
               const babyGuessers = rsvps
                 .filter(r => r.guessDate || r.guessTime || r.guessWeight || r.guessLength || r.guessEyeColor || r.guessHairColor)
                 .slice()
                 .sort((a, b) => score(b.id) - score(a.id))
 
-              const fields: { key: keyof RSVP; label: string; unit?: string; winners: Set<string>; actual: string; format?: (v: string) => string }[] = [
-                { key: 'gender',         label: '👶 Kön',        winners: genderW, actual: act.gender, format: v => v === 'boy' ? 'Pojke' : 'Flicka' },
-                { key: 'guessDate',      label: '📅 Datum',      winners: dateW,   actual: act.actualDate },
-                { key: 'guessTime',      label: '🕐 Tid',        winners: timeW,   actual: act.actualTime },
-                { key: 'guessWeight',    label: '⚖️ Vikt',       unit: 'g',  winners: weightW, actual: act.actualWeight },
-                { key: 'guessLength',    label: '📏 Längd',      unit: 'cm', winners: lengthW, actual: act.actualLength },
-                { key: 'guessEyeColor',  label: '👁️ Ögonfärg',  winners: eyeW,    actual: act.actualEyeColor },
-                { key: 'guessHairColor', label: '💇 Hårfärg',   winners: hairW,   actual: act.actualHairColor },
+              const fields: { key: keyof RSVP; label: string; unit?: string; winners: Set<string>; actual: string }[] = [
+                { key: 'guessDate',      label: '📅 Datum',     winners: dateW,   actual: act.actualDate },
+                { key: 'guessTime',      label: '🕐 Tid',       winners: timeW,   actual: act.actualTime },
+                { key: 'guessWeight',    label: '⚖️ Vikt',      unit: 'g', winners: weightW, actual: act.actualWeight },
+                { key: 'guessLength',    label: '📏 Längd',     unit: 'cm', winners: lengthW, actual: act.actualLength },
+                { key: 'guessEyeColor',  label: '👁️ Ögonfärg', winners: eyeW,    actual: act.actualEyeColor },
+                { key: 'guessHairColor', label: '💇 Hårfärg',  winners: hairW,   actual: act.actualHairColor },
               ]
 
               return (
@@ -420,7 +418,7 @@ export default function Admin() {
                               <div key={f.key as string} className="flex justify-between items-center gap-2">
                                 <span className="text-gray-400 flex-shrink-0">{f.label}</span>
                                 <span className="flex items-center gap-1">
-                                  <span className="text-gray-700 font-medium">{f.format ? f.format(val) : val}{f.unit ? ` ${f.unit}` : ''}</span>
+                                  <span className="text-gray-700 font-medium">{val}{f.unit ? ` ${f.unit}` : ''}</span>
                                   {actualSet && (
                                     <span className={isWinner ? 'text-green-500' : 'text-red-300'}>
                                       {isWinner ? '✓' : '✗'}
@@ -538,18 +536,9 @@ export default function Admin() {
 
                 {/* Actual baby stats */}
                 <div className="card space-y-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h2 className="font-display text-lg text-gray-700">👶 Bebisens faktiska data</h2>
-                      <p className="text-sm text-gray-400 mt-0.5">Fyll i efter födseln — aktiverar poängsättning i Babydata-tabben</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setDraft(d => ({ ...d, actualDate: '', actualTime: '', actualWeight: '', actualLength: '', actualEyeColor: '', actualHairColor: '' }))}
-                      className="flex-shrink-0 text-xs text-gray-400 hover:text-red-400 transition-colors mt-1"
-                    >
-                      ↺ Nollställ
-                    </button>
+                  <div>
+                    <h2 className="font-display text-lg text-gray-700">👶 Bebisens faktiska data</h2>
+                    <p className="text-sm text-gray-400 mt-0.5">Fyll i efter födseln — aktiverar poängsättning i Babydata-tabben</p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">

@@ -51,7 +51,7 @@ export default function Home() {
             Gender Reveal
           </h1>
           <p className="font-display italic text-2xl sm:text-3xl text-sage-400 mb-6">
-            för {PARENTS_NAMES}
+            hemma hos {PARENTS_NAMES}
           </p>
         </div>
 
@@ -90,21 +90,16 @@ export default function Home() {
             </div>
           ) : (
             <Link to="/rsvp" className="btn-primary text-lg px-10 py-4">
-              OSA &amp; Gissa kön ✨
+              OSA &amp; Gissa ✨
             </Link>
           )}
         </div>
 
         {/* Soft note */}
         <p className="mt-8 text-sm text-gray-400 animate-fade-in" style={{ animationDelay: '0.6s', opacity: 0 }}>
-          Skicka din gissning, gissa ett namn och lämna ett meddelande till föräldrarna 💌
+          Skicka din gissning, ge namnförslag och lämna ett meddelande till föräldrarna 💌
         </p>
       </main>
-
-      {/* Footer */}
-      <footer className="text-center py-6 text-xs text-gray-300">
-        Gjord med kärlek för {PARENTS_NAMES}
-      </footer>
     </div>
   )
 }
