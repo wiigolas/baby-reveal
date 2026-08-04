@@ -41,7 +41,7 @@ export default function Home() {
         {/* Badge */}
         <div className="animate-fade-in mb-6">
           <span className="inline-block bg-sage-100 text-sage-500 text-sm font-medium px-4 py-1.5 rounded-full tracking-wide">
-            Du är inbjuden 💕
+            Du är inbjuden till
           </span>
         </div>
 
