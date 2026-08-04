@@ -44,7 +44,7 @@ export default function Thanks() {
     return unsub
   }, [])
 
-const total = boys + girls
+  const total = boys + girls
   const boyPct = total ? Math.round((boys / total) * 100) : 50
   const girlPct = total ? Math.round((girls / total) * 100) : 50
   const emoji = gender === 'boy' ? '💙' : gender === 'girl' ? '💗' : '✨'
@@ -60,7 +60,7 @@ const total = boys + girls
       {attending === 'yes' && (
         <p className="text-gray-500 mb-4 animate-fade-in">
           Kom ihåg att komma klädd i{' '}
-          {gender === 'boy' ? '💙 blått!' : gender === 'girl' ? '💗 rO.S.A!' : '💙 blått eller 💗 rO.S.A!'}
+          {gender === 'boy' ? 'blått!' : gender === 'girl' ? 'rosa!' : 'blått eller rosa!'}
         </p>
       )}
 

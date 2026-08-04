@@ -197,8 +197,8 @@ export default function Admin() {
                   key={t.id}
                   onClick={() => setTab(t.id)}
                   className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${tab === t.id
-                      ? 'bg-sage-300 text-white shadow-sm'
-                      : 'bg-white text-gray-500 border border-sun-100 hover:border-sage-200'
+                    ? 'bg-sage-300 text-white shadow-sm'
+                    : 'bg-white text-gray-500 border border-sun-100 hover:border-sage-200'
                     }`}
                 >
                   {t.label}
@@ -234,8 +234,8 @@ export default function Admin() {
                       key={t.key}
                       onClick={() => setGuestFilter(t.key as 'all' | 'yes' | 'no')}
                       className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${guestFilter === t.key
-                          ? 'bg-sage-300 text-white'
-                          : 'bg-white text-gray-500 border border-sun-100 hover:border-sage-200'
+                        ? 'bg-sage-300 text-white'
+                        : 'bg-white text-gray-500 border border-sun-100 hover:border-sage-200'
                         }`}
                     >
                       {t.label}
@@ -251,15 +251,15 @@ export default function Admin() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium text-gray-800">{r.name}</span>
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.attending === 'yes'
-                            ? 'bg-green-100 text-green-600'
-                            : 'bg-gray-100 text-gray-500'
+                          ? 'bg-green-100 text-green-600'
+                          : 'bg-gray-100 text-gray-500'
                           }`}>
                           {r.attending === 'yes' ? 'Kommer' : 'Tackat nej'}
                         </span>
                         {r.gender && (
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.gender === 'boy'
-                              ? 'bg-blue-100 text-blue-500'
-                              : 'bg-pink-100 text-pink-500'
+                            ? 'bg-blue-100 text-blue-500'
+                            : 'bg-pink-100 text-pink-500'
                             }`}>
                             Gissar {r.gender === 'boy' ? 'pojke' : 'flicka'}
                           </span>
@@ -395,10 +395,10 @@ export default function Admin() {
                           </div>
                           {hasActuals && (
                             <span className={`text-sm font-semibold px-2 py-0.5 rounded-full ${s === maxFields && s > 0
-                                ? 'bg-green-100 text-green-600'
-                                : s > 0
-                                  ? 'bg-sun-100 text-gray-600'
-                                  : 'bg-gray-100 text-gray-400'
+                              ? 'bg-green-100 text-green-600'
+                              : s > 0
+                                ? 'bg-sun-100 text-gray-600'
+                                : 'bg-gray-100 text-gray-400'
                               }`}>
                               {s} / {maxFields} rätt
                             </span>
@@ -447,10 +447,10 @@ export default function Admin() {
                         type="button"
                         onClick={() => setDraft(d => ({ ...d, gender: g }))}
                         className={`py-4 rounded-2xl border-2 font-medium text-base transition-all duration-200 ${draft.gender === g
-                            ? g === 'boy'
-                              ? 'border-blue-400 bg-blue-50 text-blue-600 shadow-sm'
-                              : 'border-pink-400 bg-pink-50 text-pink-600 shadow-sm'
-                            : 'border-sun-100 text-gray-500 hover:border-sun-200'
+                          ? g === 'boy'
+                            ? 'border-blue-400 bg-blue-50 text-blue-600 shadow-sm'
+                            : 'border-pink-400 bg-pink-50 text-pink-600 shadow-sm'
+                          : 'border-sun-100 text-gray-500 hover:border-sun-200'
                           }`}
                       >
                         {g === 'boy' ? '👦 Pojke' : '👧 Flicka'}
@@ -571,8 +571,8 @@ export default function Admin() {
                         <button key={c} type="button"
                           onClick={() => setDraft(d => ({ ...d, actualEyeColor: d.actualEyeColor === c ? '' : c }))}
                           className={`px-3 py-1.5 rounded-full text-sm border-2 transition-all ${draft.actualEyeColor === c
-                              ? 'border-sage-300 bg-sage-50 text-sage-600 font-medium'
-                              : 'border-sun-100 text-gray-500 hover:border-sun-200'
+                            ? 'border-sage-300 bg-sage-50 text-sage-600 font-medium'
+                            : 'border-sun-100 text-gray-500 hover:border-sun-200'
                             }`}>
                           {c}
                         </button>
@@ -586,8 +586,8 @@ export default function Admin() {
                         <button key={c} type="button"
                           onClick={() => setDraft(d => ({ ...d, actualHairColor: d.actualHairColor === c ? '' : c }))}
                           className={`px-3 py-1.5 rounded-full text-sm border-2 transition-all ${draft.actualHairColor === c
-                              ? 'border-sage-300 bg-sage-50 text-sage-600 font-medium'
-                              : 'border-sun-100 text-gray-500 hover:border-sun-200'
+                            ? 'border-sage-300 bg-sage-50 text-sage-600 font-medium'
+                            : 'border-sun-100 text-gray-500 hover:border-sun-200'
                             }`}>
                           {c}
                         </button>
