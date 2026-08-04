@@ -8,6 +8,9 @@ import { useSettings, DEFAULTS, type Settings } from '../hooks/useSettings'
 const ADMIN_PASSWORD = 'babyreveal2026'
 // ────────────────────────────────────────────────────────────────────────────
 
+const EYE_COLORS  = ['Blå', 'Grön', 'Brun', 'Grå', 'Hasselnöt']
+const HAIR_COLORS = ['Blond', 'Brun', 'Svart', 'Röd', 'Lite hår']
+
 interface RSVP {
   id: string
   name: string
@@ -315,67 +318,123 @@ export default function Admin() {
             )}
 
             {/* Baby data */}
-            {tab === 'baby' && (
-              <div className="space-y-4 animate-fade-in">
-                {rsvps.filter(r =>
-                  r.guessDate || r.guessTime || r.guessWeight || r.guessLength || r.guessEyeColor || r.guessHairColor
-                ).length === 0 && (
-                  <p className="text-center text-gray-400 py-10">Inga babygissningar än</p>
-                )}
-                {rsvps.filter(r =>
-                  r.guessDate || r.guessTime || r.guessWeight || r.guessLength || r.guessEyeColor || r.guessHairColor
-                ).map(r => (
-                  <div key={r.id} className="card space-y-3">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium text-gray-800">{r.name}</p>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        r.gender === 'boy' ? 'bg-blue-100 text-blue-500' : 'bg-pink-100 text-pink-500'
-                      }`}>
-                        Gissar {r.gender === 'boy' ? 'pojke' : 'flicka'}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
-                      {r.guessDate && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">📅 Datum</span>
-                          <span className="text-gray-700 font-medium">{r.guessDate}</span>
+            {tab === 'baby' && (() => {
+              // ── Scoring helpers ──────────────────────────────────────────
+              const toMins = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m }
+
+              function closestWinners(
+                field: keyof RSVP,
+                actual: string,
+                type: 'exact' | 'numeric' | 'date' | 'time'
+              ): Set<string> {
+                if (!actual) return new Set()
+                const cands = rsvps.filter(r => r[field])
+                if (!cands.length) return new Set()
+                if (type === 'exact') {
+                  return new Set(cands.filter(r => r[field] === actual).map(r => r.id))
+                }
+                let diff: (r: RSVP) => number
+                if (type === 'numeric') {
+                  const av = parseFloat(actual)
+                  diff = r => Math.abs(parseFloat(r[field] as string) - av)
+                } else if (type === 'date') {
+                  const av = new Date(actual).getTime()
+                  diff = r => Math.abs(new Date(r[field] as string).getTime() - av)
+                } else {
+                  const av = toMins(actual)
+                  diff = r => Math.abs(toMins(r[field] as string) - av)
+                }
+                const scored = cands.map(r => ({ id: r.id, d: diff(r) }))
+                const min = Math.min(...scored.map(s => s.d))
+                return new Set(scored.filter(s => s.d === min).map(s => s.id))
+              }
+
+              const act = settings
+              const dateW   = closestWinners('guessDate',      act.actualDate,      'date')
+              const timeW   = closestWinners('guessTime',      act.actualTime,      'time')
+              const weightW = closestWinners('guessWeight',    act.actualWeight,    'numeric')
+              const lengthW = closestWinners('guessLength',    act.actualLength,    'numeric')
+              const eyeW    = closestWinners('guessEyeColor',  act.actualEyeColor,  'exact')
+              const hairW   = closestWinners('guessHairColor', act.actualHairColor, 'exact')
+
+              const hasActuals = !!(act.actualDate || act.actualTime || act.actualWeight || act.actualLength || act.actualEyeColor || act.actualHairColor)
+
+              const score = (id: string) =>
+                [dateW, timeW, weightW, lengthW, eyeW, hairW].filter(s => s.has(id)).length
+
+              const babyGuessers = rsvps
+                .filter(r => r.guessDate || r.guessTime || r.guessWeight || r.guessLength || r.guessEyeColor || r.guessHairColor)
+                .slice()
+                .sort((a, b) => score(b.id) - score(a.id))
+
+              const fields: { key: keyof RSVP; label: string; unit?: string; winners: Set<string>; actual: string }[] = [
+                { key: 'guessDate',      label: '📅 Datum',     winners: dateW,   actual: act.actualDate },
+                { key: 'guessTime',      label: '🕐 Tid',       winners: timeW,   actual: act.actualTime },
+                { key: 'guessWeight',    label: '⚖️ Vikt',      unit: 'g', winners: weightW, actual: act.actualWeight },
+                { key: 'guessLength',    label: '📏 Längd',     unit: 'cm', winners: lengthW, actual: act.actualLength },
+                { key: 'guessEyeColor',  label: '👁️ Ögonfärg', winners: eyeW,    actual: act.actualEyeColor },
+                { key: 'guessHairColor', label: '💇 Hårfärg',  winners: hairW,   actual: act.actualHairColor },
+              ]
+
+              return (
+                <div className="space-y-4 animate-fade-in">
+                  {babyGuessers.length === 0 && (
+                    <p className="text-center text-gray-400 py-10">Inga babygissningar än</p>
+                  )}
+                  {babyGuessers.map((r, i) => {
+                    const s = score(r.id)
+                    const maxFields = fields.filter(f => r[f.key]).length
+                    return (
+                      <div key={r.id} className="card space-y-3">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            {hasActuals && i === 0 && s > 0 && <span className="text-lg">🏆</span>}
+                            <p className="font-medium text-gray-800">{r.name}</p>
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                              r.gender === 'boy' ? 'bg-blue-100 text-blue-500' : 'bg-pink-100 text-pink-500'
+                            }`}>
+                              {r.gender === 'boy' ? 'pojke' : 'flicka'}
+                            </span>
+                          </div>
+                          {hasActuals && (
+                            <span className={`text-sm font-semibold px-2 py-0.5 rounded-full ${
+                              s === maxFields && s > 0
+                                ? 'bg-green-100 text-green-600'
+                                : s > 0
+                                  ? 'bg-sun-100 text-gray-600'
+                                  : 'bg-gray-100 text-gray-400'
+                            }`}>
+                              {s} / {maxFields} rätt
+                            </span>
+                          )}
                         </div>
-                      )}
-                      {r.guessTime && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">🕐 Tid</span>
-                          <span className="text-gray-700 font-medium">{r.guessTime}</span>
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
+                          {fields.map(f => {
+                            const val = r[f.key] as string
+                            if (!val) return null
+                            const isWinner = f.winners.has(r.id)
+                            const actualSet = !!f.actual
+                            return (
+                              <div key={f.key as string} className="flex justify-between items-center gap-2">
+                                <span className="text-gray-400 flex-shrink-0">{f.label}</span>
+                                <span className="flex items-center gap-1">
+                                  <span className="text-gray-700 font-medium">{val}{f.unit ? ` ${f.unit}` : ''}</span>
+                                  {actualSet && (
+                                    <span className={isWinner ? 'text-green-500' : 'text-red-300'}>
+                                      {isWinner ? '✓' : '✗'}
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            )
+                          })}
                         </div>
-                      )}
-                      {r.guessWeight && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">⚖️ Vikt</span>
-                          <span className="text-gray-700 font-medium">{r.guessWeight} g</span>
-                        </div>
-                      )}
-                      {r.guessLength && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">📏 Längd</span>
-                          <span className="text-gray-700 font-medium">{r.guessLength} cm</span>
-                        </div>
-                      )}
-                      {r.guessEyeColor && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">👁️ Ögonfärg</span>
-                          <span className="text-gray-700 font-medium">{r.guessEyeColor}</span>
-                        </div>
-                      )}
-                      {r.guessHairColor && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">💇 Hårfärg</span>
-                          <span className="text-gray-700 font-medium">{r.guessHairColor}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()}
 
             {/* Settings */}
             {tab === 'settings' && (
@@ -460,6 +519,7 @@ export default function Admin() {
                     { key: 'partyTime'    as const,  label: 'Datum & tid',       placeholder: 'Lördag 19 juli · 14:00' },
                     { key: 'partyDate'   as const,   label: 'Nedräkningsmål (ISO)', placeholder: '2026-07-19T14:00:00' },
                     { key: 'partyLocation' as const, label: 'Plats',             placeholder: 'Trädgården, Rosgatan 12' },
+                    { key: 'dueDate'      as const,  label: 'Beräknat förlossningsdatum (BF)', placeholder: 't.ex. 15 september' },
                   ].map(({ key, label, placeholder }) => (
                     <div key={key} className="space-y-1">
                       <label className="block text-sm font-medium text-gray-600">{label}</label>
@@ -472,6 +532,68 @@ export default function Admin() {
                       />
                     </div>
                   ))}
+                </div>
+
+                {/* Actual baby stats */}
+                <div className="card space-y-4">
+                  <div>
+                    <h2 className="font-display text-lg text-gray-700">👶 Bebisens faktiska data</h2>
+                    <p className="text-sm text-gray-400 mt-0.5">Fyll i efter födseln — aktiverar poängsättning i Babydata-tabben</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-600">Datum</label>
+                      <input type="date" className="input-field" value={draft.actualDate}
+                        onChange={e => setDraft(d => ({ ...d, actualDate: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-600">Tid</label>
+                      <input type="time" className="input-field" value={draft.actualTime}
+                        onChange={e => setDraft(d => ({ ...d, actualTime: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-600">Vikt (gram)</label>
+                      <input type="number" className="input-field" placeholder="t.ex. 3500" value={draft.actualWeight}
+                        onChange={e => setDraft(d => ({ ...d, actualWeight: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-sm font-medium text-gray-600">Längd (cm)</label>
+                      <input type="number" className="input-field" placeholder="t.ex. 50" value={draft.actualLength}
+                        onChange={e => setDraft(d => ({ ...d, actualLength: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-600">Ögonfärg</label>
+                    <div className="flex flex-wrap gap-2">
+                      {EYE_COLORS.map(c => (
+                        <button key={c} type="button"
+                          onClick={() => setDraft(d => ({ ...d, actualEyeColor: d.actualEyeColor === c ? '' : c }))}
+                          className={`px-3 py-1.5 rounded-full text-sm border-2 transition-all ${
+                            draft.actualEyeColor === c
+                              ? 'border-sage-300 bg-sage-50 text-sage-600 font-medium'
+                              : 'border-sun-100 text-gray-500 hover:border-sun-200'
+                          }`}>
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-600">Hårfärg</label>
+                    <div className="flex flex-wrap gap-2">
+                      {HAIR_COLORS.map(c => (
+                        <button key={c} type="button"
+                          onClick={() => setDraft(d => ({ ...d, actualHairColor: d.actualHairColor === c ? '' : c }))}
+                          className={`px-3 py-1.5 rounded-full text-sm border-2 transition-all ${
+                            draft.actualHairColor === c
+                              ? 'border-sage-300 bg-sage-50 text-sage-600 font-medium'
+                              : 'border-sun-100 text-gray-500 hover:border-sun-200'
+                          }`}>
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Reveal control */}

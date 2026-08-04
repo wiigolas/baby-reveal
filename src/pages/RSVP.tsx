@@ -40,8 +40,8 @@ const INITIAL: FormState = {
   guessHairColor: '',
 }
 
-const EYE_COLORS  = ['Blå', 'Grön', 'Brun', 'Grå', 'Hasselnöt']
-const HAIR_COLORS = ['Blond', 'Brun', 'Svart', 'Röd', 'Lite hår']
+const EYE_COLORS = ['Blå', 'Grön', 'Brun', 'Grå']
+const HAIR_COLORS = ['Blond', 'Brun', 'Svart', 'Röd', 'Skallig']
 
 const STORAGE_KEY = 'baby_reveal_submitted'
 
@@ -118,7 +118,17 @@ export default function RSVP() {
   }
 
   function canSubmit() {
-    return form.gender !== null && form.nameGuess.trim().length >= 1 && form.message.trim().length >= 1
+    return (
+      form.gender !== null &&
+      form.nameGuess.trim().length >= 1 &&
+      form.message.trim().length >= 1 &&
+      form.guessDate.length > 0 &&
+      form.guessTime.length > 0 &&
+      form.guessWeight.length > 0 &&
+      form.guessLength.length > 0 &&
+      form.guessEyeColor.length > 0 &&
+      form.guessHairColor.length > 0
+    )
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -134,11 +144,11 @@ export default function RSVP() {
       gender: form.gender,
       nameGuess: form.nameGuess.trim(),
       message: form.message.trim(),
-      guessDate:      form.guessDate,
-      guessTime:      form.guessTime,
-      guessWeight:    form.guessWeight,
-      guessLength:    form.guessLength,
-      guessEyeColor:  form.guessEyeColor,
+      guessDate: form.guessDate,
+      guessTime: form.guessTime,
+      guessWeight: form.guessWeight,
+      guessLength: form.guessLength,
+      guessEyeColor: form.guessEyeColor,
       guessHairColor: form.guessHairColor,
       submittedAt: serverTimestamp(),
     })
@@ -229,11 +239,10 @@ export default function RSVP() {
                       key={opt as string}
                       type="button"
                       onClick={() => set('dietary', opt)}
-                      className={`py-4 rounded-2xl border-2 font-medium text-base transition-all duration-200 ${
-                        form.dietary === opt
+                      className={`py-4 rounded-2xl border-2 font-medium text-base transition-all duration-200 ${form.dietary === opt
                           ? 'border-sage-300 bg-sage-50 text-sage-500 shadow-sm'
                           : 'border-sun-100 text-gray-500 hover:border-sun-200'
-                      }`}
+                        }`}
                     >
                       {opt === 'yes' ? 'Ja' : 'Nej'}
                     </button>
@@ -318,16 +327,21 @@ export default function RSVP() {
 
               {/* Baby guesses */}
               <div className="space-y-4 pt-2 border-t border-sun-100">
-                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Gissa babyn <span className="font-normal normal-case text-gray-400">(valfritt)</span></p>
+                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Gissa babyn</p>
 
                 {/* Date + Time */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-600">Födelsedatum</label>
+                    <label className="block text-sm font-medium text-gray-600">
+                      Födelsedatum <span className="text-sage-400">*</span>
+                      {settings.dueDate && (
+                        <span className="ml-2 font-normal text-gray-400">(BF: {settings.dueDate})</span>
+                      )}
+                    </label>
                     <input type="date" className="input-field" value={form.guessDate} onChange={e => set('guessDate', e.target.value)} />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-600">Klockslag</label>
+                    <label className="block text-sm font-medium text-gray-600">Klockslag <span className="text-sage-400">*</span></label>
                     <input type="time" className="input-field" value={form.guessTime} onChange={e => set('guessTime', e.target.value)} />
                   </div>
                 </div>
@@ -335,18 +349,18 @@ export default function RSVP() {
                 {/* Weight + Length */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-600">Vikt (gram)</label>
+                    <label className="block text-sm font-medium text-gray-600">Vikt (gram) <span className="text-sage-400">*</span></label>
                     <input type="number" className="input-field" placeholder="t.ex. 3500" min={500} max={6000} value={form.guessWeight} onChange={e => set('guessWeight', e.target.value)} />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-600">Längd (cm)</label>
+                    <label className="block text-sm font-medium text-gray-600">Längd (cm) <span className="text-sage-400">*</span></label>
                     <input type="number" className="input-field" placeholder="t.ex. 50" min={30} max={65} value={form.guessLength} onChange={e => set('guessLength', e.target.value)} />
                   </div>
                 </div>
 
                 {/* Eye color */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-600">Ögonfärg</label>
+                  <label className="block text-sm font-medium text-gray-600">Ögonfärg <span className="text-sage-400">*</span></label>
                   <div className="flex flex-wrap gap-2">
                     {EYE_COLORS.map(c => (
                       <button key={c} type="button" onClick={() => set('guessEyeColor', form.guessEyeColor === c ? '' : c)}
@@ -359,7 +373,7 @@ export default function RSVP() {
 
                 {/* Hair color */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-600">Hårfärg</label>
+                  <label className="block text-sm font-medium text-gray-600">Hårfärg <span className="text-sage-400">*</span></label>
                   <div className="flex flex-wrap gap-2">
                     {HAIR_COLORS.map(c => (
                       <button key={c} type="button" onClick={() => set('guessHairColor', form.guessHairColor === c ? '' : c)}

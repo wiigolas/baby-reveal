@@ -11,6 +11,13 @@ export interface Settings {
   partyLocation: string
   partyTime: string
   revealPhase: 'waiting' | 'drumroll' | 'revealed'
+  dueDate: string
+  actualDate: string
+  actualTime: string
+  actualWeight: string
+  actualLength: string
+  actualEyeColor: string
+  actualHairColor: string
 }
 
 export const DEFAULTS: Settings = {
@@ -22,6 +29,13 @@ export const DEFAULTS: Settings = {
   partyLocation: 'Trädgården, Rosgatan 12',
   partyTime: 'Lördag 19 juli · 14:00',
   revealPhase: 'waiting',
+  dueDate: '',
+  actualDate: '',
+  actualTime: '',
+  actualWeight: '',
+  actualLength: '',
+  actualEyeColor: '',
+  actualHairColor: '',
 }
 
 export function useSettings(): { settings: Settings; loading: boolean } {
