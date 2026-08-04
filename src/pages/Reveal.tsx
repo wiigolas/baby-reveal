@@ -21,6 +21,18 @@ function seededRandom(seed: string, offset: number) {
 
 interface NameItem { name: string; count: number }
 
+// Safe slots along the perimeter — avoids the center where main content lives
+const SLOTS = [
+  // Top strip
+  { x: 4, y: 4 }, { x: 20, y: 3 }, { x: 38, y: 5 }, { x: 55, y: 3 }, { x: 70, y: 5 }, { x: 84, y: 4 },
+  // Bottom strip
+  { x: 3, y: 84 }, { x: 18, y: 87 }, { x: 36, y: 84 }, { x: 53, y: 87 }, { x: 68, y: 84 }, { x: 82, y: 87 },
+  // Left strip
+  { x: 2, y: 22 }, { x: 3, y: 40 }, { x: 2, y: 58 }, { x: 3, y: 73 },
+  // Right strip
+  { x: 82, y: 22 }, { x: 83, y: 40 }, { x: 82, y: 58 }, { x: 83, y: 73 },
+]
+
 function NameCloud({ names, phase, isBoy }: {
   names: NameItem[]
   phase: 'waiting' | 'drumroll' | 'revealed'
@@ -30,50 +42,46 @@ function NameCloud({ names, phase, isBoy }: {
 
   const maxCount = Math.max(...names.map(n => n.count))
 
-  // Assign names to 4 corner zones round-robin
-  const zones: NameItem[][] = [[], [], [], []]
-  names.forEach((item, i) => zones[i % 4].push(item))
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      {names.map(({ name, count }, i) => {
+        const slot = SLOTS[i % SLOTS.length]
+        // Add a small jitter so names in the same slot don't stack perfectly
+        const jx = (seededRandom(name, 5) - 0.5) * 4
+        const jy = (seededRandom(name, 6) - 0.5) * 4
+        const x = slot.x + jx
+        const y = slot.y + jy
+        const rot = (seededRandom(name, 2) - 0.5) * 20
+        const size = 1.0 + (count / maxCount) * 1.6
+        const delay = seededRandom(name, 3) * 2
 
-  const colorClass = phase === 'revealed'
-    ? isBoy ? 'text-blue-300' : 'text-pink-300'
-    : 'text-white'
+        const colorClass = phase === 'revealed'
+          ? isBoy ? 'text-blue-300' : 'text-pink-300'
+          : 'text-white'
 
-  const renderZone = (items: NameItem[], corner: string, align: 'left' | 'right') => (
-    <div className={`absolute ${corner} flex flex-col gap-0.5`} style={{ maxWidth: '44%' }}>
-      {items.map(item => {
-        const rot = (seededRandom(item.name, 2) - 0.5) * 18
-        const size = 0.8 + (item.count / maxCount) * 1.0
-        const delay = seededRandom(item.name, 3) * 2
-        const xShift = (seededRandom(item.name, 4) - 0.3) * 16
-        const opacity = 0.4 + (item.count / maxCount) * 0.4
+        const opacity = phase === 'revealed'
+          ? 0.5 + (count / maxCount) * 0.35
+          : 0.4 + (count / maxCount) * 0.35
+
         return (
           <span
-            key={item.name}
-            className={`font-display italic select-none transition-colors duration-1000 animate-float ${colorClass}`}
+            key={name}
+            className={`absolute font-display italic select-none transition-colors duration-1000 animate-float ${colorClass}`}
             style={{
-              fontSize: `clamp(0.6rem, ${size * 2.2}vw, ${size}rem)`,
-              transform: `rotate(${rot}deg) translateX(${align === 'right' ? -xShift : xShift}px)`,
+              left: `${x}%`,
+              top: `${y}%`,
+              fontSize: `${size}rem`,
+              transform: `rotate(${rot}deg)`,
               opacity,
               animationDelay: `${delay}s`,
-              animationDuration: `${3 + seededRandom(item.name, 5) * 2}s`,
+              animationDuration: `${3 + seededRandom(name, 4) * 2}s`,
               textShadow: '0 2px 8px rgba(0,0,0,0.3)',
-              whiteSpace: 'nowrap',
-              alignSelf: align === 'right' ? 'flex-end' : 'flex-start',
             }}
           >
-            {item.name}
+            {name}
           </span>
         )
       })}
-    </div>
-  )
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {renderZone(zones[0], 'top-4 left-4',    'left')}
-      {renderZone(zones[1], 'top-4 right-4',   'right')}
-      {renderZone(zones[2], 'bottom-4 left-4', 'left')}
-      {renderZone(zones[3], 'bottom-4 right-4','right')}
     </div>
   )
 }
@@ -223,10 +231,9 @@ export default function Reveal() {
   const boyPct = total ? Math.round((boys / total) * 100) : 50
   const girlPct = total ? Math.round((girls / total) * 100) : 50
 
-  // Before reveal: show all names. After reveal: only names from correct-gender guessers.
+  // Aggregate name guesses
   const nameMap: Record<string, number> = {}
   rsvps.forEach(r => {
-    if (phase === 'revealed' && r.gender !== ACTUAL_GENDER) return
     const n = r.nameGuess?.trim()
     if (n) nameMap[n] = (nameMap[n] ?? 0) + 1
   })
@@ -264,14 +271,11 @@ export default function Reveal() {
 
       {/* ── WAITING phase ── */}
       {phase === 'waiting' && (
-        <div className="text-center space-y-8 px-6 animate-fade-in z-10 w-full max-w-lg mx-auto">
+        <div className="text-center space-y-12 px-8 animate-fade-in z-10">
           <div>
-            <p className="text-white/50 text-xs sm:text-sm uppercase tracking-[0.3em] mb-3 font-body">Tror ni att det blir en</p>
-            <h1
-              className="font-display uppercase text-white font-semibold"
-              style={{ fontSize: 'clamp(1.4rem, 4.8vw, 2.5rem)' }}
-            >
-              pojke eller flicka?
+            <p className="text-white/50 text-sm uppercase tracking-[0.3em] mb-3 font-body">Ögonblicket ni har väntat på</p>
+            <h1 className="font-display text-6xl sm:text-8xl text-white font-semibold">
+              Pojke eller flicka?
             </h1>
           </div>
 
@@ -287,18 +291,21 @@ export default function Reveal() {
                 <div className="bg-blue-400/70 transition-all duration-700" style={{ width: `${boyPct}%` }} />
                 <div className="bg-pink-400/70 flex-1 transition-all duration-700" />
               </div>
-              <p className="text-white/30 text-xs">{total} gissning{total !== 1 ? 'ar' : ''}</p>
+              <p className="text-white/30 text-xs">{total} gissning{total !== 1 ? 'ar' : ''} inlämnade</p>
             </div>
           )}
+
+          <div className="flex gap-3 justify-center text-4xl animate-float">
+            <span>✨</span><span style={{ animationDelay: '0.5s' }}>🌟</span><span style={{ animationDelay: '1s' }}>✨</span>
+          </div>
         </div>
       )}
 
       {/* ── DRUMROLL phase ── */}
       {phase === 'drumroll' && (
         <div className="text-center z-10 animate-fade-in">
-          <p className="text-white/60 text-lg uppercase tracking-widest mb-6 font-body">Gör er redo…</p>
-          <div className="font-display leading-none text-white font-bold animate-float"
-            style={{ fontSize: 'clamp(6rem, 30vw, 12rem)' }}>
+          <p className="text-white/60 text-xl uppercase tracking-widest mb-6 font-body">Gör er redo…</p>
+          <div className="font-display text-[12rem] leading-none text-white font-bold animate-float">
             {drumrollCount}
           </div>
         </div>
@@ -306,21 +313,23 @@ export default function Reveal() {
 
       {/* ── REVEALED phase ── */}
       {phase === 'revealed' && (
-        <div className="text-center z-10 px-4 w-full max-w-full">
+        <div className="text-center z-10 space-y-6 px-8">
           <div className="animate-slide-up">
-            <p className={`text-xs sm:text-sm uppercase tracking-[0.4em] mb-3 font-body ${isBoy ? 'text-blue-400' : 'text-pink-400'}`}>
+            <p className={`text-sm uppercase tracking-[0.4em] mb-4 font-body ${isBoy ? 'text-blue-400' : 'text-pink-400'}`}>
               Det blir en…
             </p>
-            <h1
-              className={`font-display font-bold leading-none ${isBoy ? 'text-blue-600' : 'text-pink-500'}`}
-              style={{ fontSize: 'clamp(3.5rem, 18vw, 14rem)' }}
-            >
+            <h1 className={`font-display font-bold leading-none ${isBoy ? 'text-blue-600' : 'text-pink-500'}`}
+              style={{ fontSize: 'clamp(5rem, 20vw, 14rem)' }}>
               {isBoy ? 'POJKE' : 'FLICKA'}
             </h1>
-            <div className="text-6xl sm:text-8xl mt-4 animate-float">
+            <div className="text-8xl mt-4 animate-float">
               {isBoy ? '💙' : '💗'}
             </div>
           </div>
+          <p className={`font-display italic text-2xl ${isBoy ? 'text-blue-500' : 'text-pink-400'} animate-fade-in`}
+            style={{ animationDelay: '0.5s', opacity: 0 }}>
+            Grattis! 🎊
+          </p>
         </div>
       )}
 

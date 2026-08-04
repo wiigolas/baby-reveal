@@ -538,9 +538,18 @@ export default function Admin() {
 
                 {/* Actual baby stats */}
                 <div className="card space-y-4">
-                  <div>
-                    <h2 className="font-display text-lg text-gray-700">👶 Bebisens faktiska data</h2>
-                    <p className="text-sm text-gray-400 mt-0.5">Fyll i efter födseln — aktiverar poängsättning i Babydata-tabben</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h2 className="font-display text-lg text-gray-700">👶 Bebisens faktiska data</h2>
+                      <p className="text-sm text-gray-400 mt-0.5">Fyll i efter födseln — aktiverar poängsättning i Babydata-tabben</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDraft(d => ({ ...d, actualDate: '', actualTime: '', actualWeight: '', actualLength: '', actualEyeColor: '', actualHairColor: '' }))}
+                      className="flex-shrink-0 text-xs text-gray-400 hover:text-red-400 transition-colors mt-1"
+                    >
+                      ↺ Nollställ
+                    </button>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
