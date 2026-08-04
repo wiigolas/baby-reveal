@@ -21,6 +21,42 @@ function seededRandom(seed: string, offset: number) {
 
 interface NameItem { name: string; count: number }
 
+// Slots ordered from center outward — popular names (highest count) get inner slots
+// anchor: 'left' = text grows right, 'right' = text grows left, 'center' = centered at x%
+// Inner ring uses only left/right sides to avoid overlapping the subtitle text at top
+type Anchor = 'left' | 'right' | 'center'
+interface Slot { x: number; y: number; anchor: Anchor }
+
+const SLOTS: Slot[] = [
+  // Inner ring — flank the center content left & right only (no top/bottom to avoid subtitle overlap)
+  { x: 88, y: 35, anchor: 'right'  },
+  { x: 12, y: 35, anchor: 'left'   },
+  { x: 88, y: 65, anchor: 'right'  },
+  { x: 12, y: 65, anchor: 'left'   },
+  // Middle ring — top and bottom are safe at y ≤ 5% / y ≥ 92%
+  { x: 50, y:  4, anchor: 'center' },
+  { x: 18, y:  6, anchor: 'left'   },
+  { x: 82, y:  6, anchor: 'right'  },
+  { x: 93, y: 22, anchor: 'right'  },
+  { x: 93, y: 50, anchor: 'right'  },
+  { x: 93, y: 76, anchor: 'right'  },
+  { x: 82, y: 93, anchor: 'right'  },
+  { x: 50, y: 94, anchor: 'center' },
+  { x: 18, y: 93, anchor: 'left'   },
+  { x:  7, y: 76, anchor: 'left'   },
+  { x:  7, y: 50, anchor: 'left'   },
+  { x:  7, y: 22, anchor: 'left'   },
+  // Outer ring — corners and far edges
+  { x:  3, y:  2, anchor: 'left'   },
+  { x: 50, y:  1, anchor: 'center' },
+  { x: 97, y:  2, anchor: 'right'  },
+  { x: 97, y: 50, anchor: 'right'  },
+  { x: 97, y: 97, anchor: 'right'  },
+  { x: 50, y: 97, anchor: 'center' },
+  { x:  3, y: 97, anchor: 'left'   },
+  { x:  3, y: 50, anchor: 'left'   },
+]
+
 function NameCloud({ names, phase, isBoy }: {
   names: NameItem[]
   phase: 'waiting' | 'drumroll' | 'revealed'
@@ -29,51 +65,55 @@ function NameCloud({ names, phase, isBoy }: {
   if (names.length === 0) return null
 
   const maxCount = Math.max(...names.map(n => n.count))
-
-  // Assign names to 4 corner zones round-robin
-  const zones: NameItem[][] = [[], [], [], []]
-  names.forEach((item, i) => zones[i % 4].push(item))
+  // Sort by count desc so popular names land in the inner (more visible) slots
+  const sorted = [...names].sort((a, b) => b.count - a.count)
 
   const colorClass = phase === 'revealed'
     ? isBoy ? 'text-blue-300' : 'text-pink-300'
     : 'text-white'
 
-  const renderZone = (items: NameItem[], corner: string, align: 'left' | 'right') => (
-    <div className={`absolute ${corner} flex flex-col gap-0.5`} style={{ maxWidth: '44%' }}>
-      {items.map(item => {
-        const rot = (seededRandom(item.name, 2) - 0.5) * 18
-        const size = 0.8 + (item.count / maxCount) * 1.0
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      {sorted.map((item, i) => {
+        const slot  = SLOTS[i % SLOTS.length]
+        const rot   = (seededRandom(item.name, 2) - 0.5) * 18
+        const size  = 0.75 + (item.count / maxCount) * 1.0
         const delay = seededRandom(item.name, 3) * 2
-        const xShift = (seededRandom(item.name, 4) - 0.3) * 16
-        const opacity = 0.4 + (item.count / maxCount) * 0.4
+        const xJit  = (seededRandom(item.name, 5) - 0.5) * 3
+        const yJit  = (seededRandom(item.name, 6) - 0.5) * 4
+        const opacity = (phase === 'revealed' ? 0.5 : 0.4) + (item.count / maxCount) * 0.35
+
+        const ax = Math.min(97, Math.max(2, slot.x + xJit))
+        const ay = Math.min(97, Math.max(1, slot.y + yJit))
+
+        let posStyle: React.CSSProperties
+        if (slot.anchor === 'right') {
+          posStyle = { right: `${100 - ax}%`, top: `${ay}%` }
+        } else {
+          posStyle = { left: `${ax}%`, top: `${ay}%` }
+        }
+
         return (
           <span
             key={item.name}
-            className={`font-display italic select-none transition-colors duration-1000 animate-float ${colorClass}`}
+            className={`absolute font-display italic select-none transition-colors duration-1000 animate-float ${colorClass}`}
             style={{
-              fontSize: `clamp(0.6rem, ${size * 2.2}vw, ${size}rem)`,
-              transform: `rotate(${rot}deg) translateX(${align === 'right' ? -xShift : xShift}px)`,
+              ...posStyle,
+              fontSize: `clamp(0.65rem, ${size * 2.2}vw, ${size}rem)`,
+              transform: slot.anchor === 'center'
+                ? `translateX(-50%) rotate(${rot}deg)`
+                : `rotate(${rot}deg)`,
               opacity,
               animationDelay: `${delay}s`,
-              animationDuration: `${3 + seededRandom(item.name, 5) * 2}s`,
+              animationDuration: `${3 + seededRandom(item.name, 4) * 2}s`,
               textShadow: '0 2px 8px rgba(0,0,0,0.3)',
               whiteSpace: 'nowrap',
-              alignSelf: align === 'right' ? 'flex-end' : 'flex-start',
             }}
           >
             {item.name}
           </span>
         )
       })}
-    </div>
-  )
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {renderZone(zones[0], 'top-4 left-4',    'left')}
-      {renderZone(zones[1], 'top-4 right-4',   'right')}
-      {renderZone(zones[2], 'bottom-4 left-4', 'left')}
-      {renderZone(zones[3], 'bottom-4 right-4','right')}
     </div>
   )
 }
