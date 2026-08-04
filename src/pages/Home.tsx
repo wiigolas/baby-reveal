@@ -87,8 +87,13 @@ export default function Home() {
               🔒 Anmälan stängd
             </div>
           ) : alreadySubmitted ? (
-            <div className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-sage-100 text-sage-500 text-lg font-medium">
-              ✓ Du har gissat!
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-sage-100 text-sage-500 text-lg font-medium">
+                ✓ Du har gissat!
+              </div>
+              <Link to="/reveal" className="btn-primary text-lg px-8 py-4">
+                Se alla gissningar ✨
+              </Link>
             </div>
           ) : (
             <Link to="/rsvp" className="btn-primary text-lg px-10 py-4">
