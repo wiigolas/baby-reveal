@@ -335,13 +335,18 @@ export default function Reveal() {
 
       {/* Hidden admin trigger — only visible when hovering bottom-right corner */}
       {phase === 'waiting' && showTrigger && (
-        <div className="fixed bottom-6 right-6 z-30 flex gap-2 items-center animate-fade-in">
+        <div
+          className="fixed bottom-6 right-6 z-30 flex gap-2 items-center animate-fade-in"
+          onMouseEnter={() => setShowTrigger(true)}
+          onMouseLeave={() => setShowTrigger(false)}
+        >
           <input
             type="password"
             placeholder="Lösenord"
             value={pwInput}
             onChange={e => setPwInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && triggerReveal()}
+            autoFocus
             className={`text-xs px-3 py-2 rounded-full backdrop-blur-sm border
                         bg-white/10 text-white placeholder-white/40 outline-none w-28
                         transition-colors duration-200
