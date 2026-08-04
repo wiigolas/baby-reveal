@@ -4,17 +4,19 @@ import { useSettings } from '../hooks/useSettings'
 
 const STORAGE_KEY = 'baby_reveal_submitted'
 
+const PETAL_EMOJIS = ['💙', '🩷', '💙', '🩷', '💙', '🩷', '💙', '🩷', '💙', '🩷', '💙', '🩷', '💙', '🩷', '💙', '🩷', '💙', '🩷', '💙', '🩷']
+
 const Petals = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
-    {['🌸', '🌷', '✨', '🌸', '💫', '🌷', '✨', '🌸'].map((emoji, i) => (
+    {PETAL_EMOJIS.map((emoji, i) => (
       <span
         key={i}
-        className="absolute text-2xl opacity-30 animate-float"
+        className="absolute text-2xl opacity-25 animate-float"
         style={{
-          left: `${10 + i * 11}%`,
-          top: `${5 + (i % 3) * 15}%`,
-          animationDelay: `${i * 0.4}s`,
-          animationDuration: `${3 + (i % 3)}s`,
+          left: `${(i * 17 + (i % 3) * 11) % 92}%`,
+          top: `${(i * 13 + (i % 4) * 9) % 90}%`,
+          animationDelay: `${(i * 0.37) % 3}s`,
+          animationDuration: `${3 + (i % 4)}s`,
         }}
       >
         {emoji}
