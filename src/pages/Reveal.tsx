@@ -263,14 +263,19 @@ export default function Reveal() {
   const boyPct = total ? Math.round((boys / total) * 100) : 50
   const girlPct = total ? Math.round((girls / total) * 100) : 50
 
-  // Before reveal: show all names. After reveal: only names from correct-gender guessers.
+  // Before reveal: show top 24 names by count.
+  // After reveal: show up to 24 names from correct-gender guessers only.
+  const MAX_NAMES = 24
   const nameMap: Record<string, number> = {}
   rsvps.forEach(r => {
     if (phase === 'revealed' && r.gender !== ACTUAL_GENDER) return
     const n = r.nameGuess?.trim()
     if (n) nameMap[n] = (nameMap[n] ?? 0) + 1
   })
-  const nameItems: NameItem[] = Object.entries(nameMap).map(([name, count]) => ({ name, count }))
+  const nameItems: NameItem[] = Object.entries(nameMap)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, MAX_NAMES)
 
   async function triggerReveal() {
     if (phase !== 'waiting') return
@@ -289,7 +294,8 @@ export default function Reveal() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col items-center justify-center relative overflow-hidden transition-colors duration-1000 ${bgClass}`}
+      className={`flex flex-col items-center justify-center relative overflow-hidden transition-colors duration-1000 ${bgClass}`}
+      style={{ height: '100dvh' }}
       // Reveal trigger: hover bottom-right corner
       onMouseMove={e => {
         const nearCorner = e.clientX > window.innerWidth - 80 && e.clientY > window.innerHeight - 80
