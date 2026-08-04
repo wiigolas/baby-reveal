@@ -293,7 +293,7 @@ export default function Reveal() {
                 </h1>
               </div>
               {total > 0 && (
-                <div className="space-y-4 w-full">
+                <div className="space-y-4 w-full max-w-xs mx-auto">
                   <p className="text-white/40 text-xs uppercase tracking-widest">Gästernas gissningar hittills</p>
                   <div className="flex justify-between text-base font-medium">
                     <span className="text-blue-300">👦 Pojke {boyPct}%</span>
