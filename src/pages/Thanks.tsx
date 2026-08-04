@@ -8,9 +8,10 @@ export default function Thanks() {
   const { state } = useLocation()
   const name: string = state?.name ?? 'vän'
   const gender: 'boy' | 'girl' | null = state?.gender ?? null
+  const attending: 'yes' | 'no' = state?.attending ?? 'yes'
 
   const { settings } = useSettings()
-  const [boys, setBoys]   = useState(0)
+  const [boys, setBoys] = useState(0)
   const [girls, setGirls] = useState(0)
 
   useEffect(() => {
@@ -29,7 +30,7 @@ export default function Thanks() {
   const emoji = gender === 'boy' ? '💙' : gender === 'girl' ? '💗' : '✨'
   const genderText = gender === 'boy' ? 'en pojke' : gender === 'girl' ? 'en flicka' : 'en överraskning'
   const total = boys + girls
-  const boyPct  = total ? Math.round((boys  / total) * 100) : 50
+  const boyPct = total ? Math.round((boys / total) * 100) : 50
   const girlPct = total ? Math.round((girls / total) * 100) : 50
 
   return (
@@ -39,12 +40,20 @@ export default function Thanks() {
       <h1 className="font-display text-4xl sm:text-5xl text-gray-800 mb-3 animate-slide-up">
         Tack, {name}!
       </h1>
-      <p className="text-gray-500 text-lg mb-2 animate-fade-in" style={{ animationDelay: '0.2s', opacity: 0 }}>
-        Din gissning är inne — du tror det blir {genderText}.
-      </p>
-      <p className="text-gray-400 mb-8 animate-fade-in" style={{ animationDelay: '0.3s', opacity: 0 }}>
-        Vi får veta på festen! 🎊
-      </p>
+      {attending === 'yes' && (
+        <p className="text-gray-500 mb-4 animate-fade-in">
+          Kom ihåg att komma klädd i{' '}
+          {gender === 'boy' ? 'blått!' : gender === 'girl' ? 'rosa!' : ' blått eller rosa!'}
+        </p>
+      )}
+      <br />
+      <Link
+        to="/reveal"
+        className="btn-primary text-lg px-8 py-4 mb-8 animate-fade-in"
+        style={{ animationDelay: '0.3s', opacity: 0 }}
+      >
+        Se alla gissningar ✨
+      </Link>
 
       {/* Live tally — only shown when setting is on */}
       {settings.showTallyToGuests && total > 0 && (

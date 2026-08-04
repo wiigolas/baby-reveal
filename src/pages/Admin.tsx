@@ -350,6 +350,7 @@ export default function Admin() {
               }
 
               const act = settings
+              const genderW = closestWinners('gender',         act.gender,          'exact')
               const dateW   = closestWinners('guessDate',      act.actualDate,      'date')
               const timeW   = closestWinners('guessTime',      act.actualTime,      'time')
               const weightW = closestWinners('guessWeight',    act.actualWeight,    'numeric')
@@ -360,20 +361,21 @@ export default function Admin() {
               const hasActuals = !!(act.actualDate || act.actualTime || act.actualWeight || act.actualLength || act.actualEyeColor || act.actualHairColor)
 
               const score = (id: string) =>
-                [dateW, timeW, weightW, lengthW, eyeW, hairW].filter(s => s.has(id)).length
+                [genderW, dateW, timeW, weightW, lengthW, eyeW, hairW].filter(s => s.has(id)).length
 
               const babyGuessers = rsvps
                 .filter(r => r.guessDate || r.guessTime || r.guessWeight || r.guessLength || r.guessEyeColor || r.guessHairColor)
                 .slice()
                 .sort((a, b) => score(b.id) - score(a.id))
 
-              const fields: { key: keyof RSVP; label: string; unit?: string; winners: Set<string>; actual: string }[] = [
-                { key: 'guessDate',      label: '📅 Datum',     winners: dateW,   actual: act.actualDate },
-                { key: 'guessTime',      label: '🕐 Tid',       winners: timeW,   actual: act.actualTime },
-                { key: 'guessWeight',    label: '⚖️ Vikt',      unit: 'g', winners: weightW, actual: act.actualWeight },
-                { key: 'guessLength',    label: '📏 Längd',     unit: 'cm', winners: lengthW, actual: act.actualLength },
-                { key: 'guessEyeColor',  label: '👁️ Ögonfärg', winners: eyeW,    actual: act.actualEyeColor },
-                { key: 'guessHairColor', label: '💇 Hårfärg',  winners: hairW,   actual: act.actualHairColor },
+              const fields: { key: keyof RSVP; label: string; unit?: string; winners: Set<string>; actual: string; format?: (v: string) => string }[] = [
+                { key: 'gender',         label: '👶 Kön',        winners: genderW, actual: act.gender, format: v => v === 'boy' ? 'Pojke' : 'Flicka' },
+                { key: 'guessDate',      label: '📅 Datum',      winners: dateW,   actual: act.actualDate },
+                { key: 'guessTime',      label: '🕐 Tid',        winners: timeW,   actual: act.actualTime },
+                { key: 'guessWeight',    label: '⚖️ Vikt',       unit: 'g',  winners: weightW, actual: act.actualWeight },
+                { key: 'guessLength',    label: '📏 Längd',      unit: 'cm', winners: lengthW, actual: act.actualLength },
+                { key: 'guessEyeColor',  label: '👁️ Ögonfärg',  winners: eyeW,    actual: act.actualEyeColor },
+                { key: 'guessHairColor', label: '💇 Hårfärg',   winners: hairW,   actual: act.actualHairColor },
               ]
 
               return (
@@ -418,7 +420,7 @@ export default function Admin() {
                               <div key={f.key as string} className="flex justify-between items-center gap-2">
                                 <span className="text-gray-400 flex-shrink-0">{f.label}</span>
                                 <span className="flex items-center gap-1">
-                                  <span className="text-gray-700 font-medium">{val}{f.unit ? ` ${f.unit}` : ''}</span>
+                                  <span className="text-gray-700 font-medium">{f.format ? f.format(val) : val}{f.unit ? ` ${f.unit}` : ''}</span>
                                   {actualSet && (
                                     <span className={isWinner ? 'text-green-500' : 'text-red-300'}>
                                       {isWinner ? '✓' : '✗'}
