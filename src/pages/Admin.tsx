@@ -29,6 +29,14 @@ interface RSVP {
   submittedAt: { seconds: number } | null
 }
 
+interface ExtraNameGuess {
+  id: string
+  name: string
+  forGender: 'boy' | 'girl'
+  nameGuess: string
+  submittedAt: { seconds: number } | null
+}
+
 function formatDate(ts: { seconds: number } | null) {
   if (!ts) return '—'
   return new Date(ts.seconds * 1000).toLocaleDateString('en-US', {
@@ -84,6 +92,7 @@ export default function Admin() {
   const [pw, setPw] = useState('')
   const [error, setError] = useState(false)
   const [rsvps, setRsvps] = useState<RSVP[]>([])
+  const [extraGuesses, setExtraGuesses] = useState<ExtraNameGuess[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'overview' | 'guests' | 'names' | 'messages' | 'baby' | 'settings'>('overview')
   const [guestFilter, setGuestFilter] = useState<'all' | 'yes' | 'no'>('all')
@@ -122,7 +131,11 @@ export default function Admin() {
       setRsvps(snap.docs.map(d => ({ id: d.id, ...d.data() } as RSVP)))
       setLoading(false)
     })
-    return unsub
+    const q2 = query(collection(db, 'extra_name_guesses'), orderBy('submittedAt', 'desc'))
+    const unsub2 = onSnapshot(q2, snap => {
+      setExtraGuesses(snap.docs.map(d => ({ id: d.id, ...d.data() } as ExtraNameGuess)))
+    })
+    return () => { unsub(); unsub2() }
   }, [authed])
 
   async function saveSettings() {
@@ -311,21 +324,46 @@ export default function Admin() {
 
             {/* Name guesses */}
             {tab === 'names' && (
-              <div className="space-y-3 animate-fade-in">
-                {nameGuesses.length === 0 && (
-                  <p className="text-center text-gray-400 py-10">Inga namnsgissningar än</p>
-                )}
-                {nameGuesses.map(r => (
-                  <div key={r.id} className="card flex items-center justify-between">
-                    <div>
-                      <p className="font-display text-xl text-gray-800">{r.nameGuess}</p>
-                      <p className="text-sm text-gray-400">gissades av {r.name}</p>
+              <div className="space-y-5 animate-fade-in">
+
+                {/* Primary guesses from RSVP */}
+                <div className="space-y-3">
+                  <h3 className="text-xs uppercase tracking-widest text-gray-400 font-medium px-1">Från O.S.A</h3>
+                  {nameGuesses.length === 0 && (
+                    <p className="text-center text-gray-400 py-6">Inga namnsgissningar än</p>
+                  )}
+                  {nameGuesses.map(r => (
+                    <div key={r.id} className="card flex items-center justify-between">
+                      <div>
+                        <p className="font-display text-xl text-gray-800">{r.nameGuess}</p>
+                        <p className="text-sm text-gray-400">gissades av {r.name}</p>
+                      </div>
+                      <span className="text-2xl">
+                        {r.gender === 'boy' ? '💙' : r.gender === 'girl' ? '💗' : '✨'}
+                      </span>
                     </div>
-                    <span className={`text-2xl`}>
-                      {r.gender === 'boy' ? '💙' : r.gender === 'girl' ? '💗' : '✨'}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
+
+                {/* Extra guesses for the other gender */}
+                <div className="space-y-3">
+                  <h3 className="text-xs uppercase tracking-widest text-gray-400 font-medium px-1">Extra namnförslag</h3>
+                  {extraGuesses.length === 0 && (
+                    <p className="text-center text-gray-400 py-6">Inga extra förslag än</p>
+                  )}
+                  {extraGuesses.map(r => (
+                    <div key={r.id} className="card flex items-center justify-between">
+                      <div>
+                        <p className="font-display text-xl text-gray-800">{r.nameGuess}</p>
+                        <p className="text-sm text-gray-400">gissades av {r.name}</p>
+                      </div>
+                      <span className="text-2xl">
+                        {r.forGender === 'boy' ? '💙' : '💗'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
               </div>
             )}
 

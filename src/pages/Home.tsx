@@ -1,8 +1,88 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { db } from '../firebase'
 import Countdown from '../components/Countdown'
 import { useSettings } from '../hooks/useSettings'
 
 const STORAGE_KEY = 'baby_reveal_submitted'
+const EXTRA_GUESS_KEY = 'baby_reveal_extra_guess'
+
+interface StoredSubmission {
+  name: string
+  gender: 'boy' | 'girl' | null
+  nameGuess: string
+  attending: 'yes' | 'no' | null
+}
+
+function ExtraNameGuessCard({ submission }: { submission: StoredSubmission }) {
+  const otherGender = submission.gender === 'boy' ? 'girl' : 'boy'
+  const otherText   = otherGender === 'girl' ? 'flicka' : 'pojke'
+  const [name, setName]           = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [done, setDone]           = useState(!!localStorage.getItem(EXTRA_GUESS_KEY))
+  const [error, setError]         = useState<string | null>(null)
+
+  if (!submission.gender) return null
+
+  async function submit() {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      await addDoc(collection(db, 'extra_name_guesses'), {
+        name:        submission.name,
+        forGender:   otherGender,
+        nameGuess:   trimmed,
+        submittedAt: serverTimestamp(),
+      })
+      localStorage.setItem(EXTRA_GUESS_KEY, trimmed)
+      setDone(true)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Något gick fel, försök igen')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (done) {
+    return (
+      <div className="mt-4 text-center">
+        <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/70 border border-sun-100 text-sm text-sage-500 font-medium">
+          ✓ {otherText.charAt(0).toUpperCase() + otherText.slice(1)}namn inlämnat!
+          <span className="text-gray-400 font-normal">— {localStorage.getItem(EXTRA_GUESS_KEY)}</span>
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-4 card max-w-xs mx-auto space-y-3 text-center">
+      <p className="text-sm text-gray-600 font-medium">
+        Vill du också föreslå ett {otherText}namn?
+      </p>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && submit()}
+          placeholder={`Föreslå ett ${otherText}namn`}
+          className="input-field flex-1 text-sm"
+        />
+        <button
+          onClick={submit}
+          disabled={submitting || !name.trim()}
+          className="btn-primary text-sm px-4 py-2 disabled:opacity-40"
+        >
+          {submitting ? '…' : 'Skicka'}
+        </button>
+      </div>
+      {error && <p className="text-red-400 text-xs">{error}</p>}
+    </div>
+  )
+}
 
 const PETAL_EMOJIS = ['💙', '🩷', '💙', '🩷', '💙', '🩷', '💙', '🩷', '💙', '🩷', '💙', '🩷', '💙', '🩷', '💙', '🩷', '💙', '🩷', '💙', '🩷']
 
@@ -27,7 +107,9 @@ const Petals = () => (
 
 export default function Home() {
   const { settings } = useSettings()
-  const alreadySubmitted = !!localStorage.getItem(STORAGE_KEY)
+  const storedRaw = localStorage.getItem(STORAGE_KEY)
+  const alreadySubmitted = !!storedRaw
+  const submission: StoredSubmission | null = storedRaw ? JSON.parse(storedRaw) : null
   const PARTY_DATE = new Date(settings.partyDate)
   const PARENTS_NAMES = settings.parentsNames
   const PARTY_LOCATION = settings.partyLocation
@@ -87,13 +169,16 @@ export default function Home() {
               🔒 Anmälan stängd
             </div>
           ) : alreadySubmitted ? (
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              <div className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-sage-100 text-sage-500 text-lg font-medium">
-                ✓ Du har gissat!
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <div className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-sage-100 text-sage-500 text-lg font-medium">
+                  ✓ Du har gissat!
+                </div>
+                <Link to="/reveal" className="btn-primary text-lg px-8 py-4">
+                  Se alla gissningar ✨
+                </Link>
               </div>
-              <Link to="/reveal" className="btn-primary text-lg px-8 py-4">
-                Se alla gissningar ✨
-              </Link>
+              {submission && <ExtraNameGuessCard submission={submission} />}
             </div>
           ) : (
             <Link to="/rsvp" className="btn-primary text-lg px-10 py-4">

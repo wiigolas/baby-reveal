@@ -13,6 +13,11 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Extra name guesses for the other gender (submitted from the home page after RSVP)
+    match /extra_name_guesses/{doc} {
+      allow read, write: if true;
+    }
+
     // Gender is stored here and only becomes readable AFTER the reveal.
     // This prevents guests from inspecting network requests to find the answer.
     match /secrets/{doc} {
