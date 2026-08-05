@@ -40,15 +40,18 @@ export const DEFAULTS: Settings = {
 
 export function useSettings(): { settings: Settings; loading: boolean } {
   const [settings, setSettings] = useState<Settings>(DEFAULTS)
+  const [secretGender, setSecretGender] = useState<'boy' | 'girl' | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Subscribe to public settings (gender is intentionally excluded)
   useEffect(() => {
     const ref = doc(db, 'settings', 'config')
     return onSnapshot(
       ref,
       snap => {
         if (snap.exists()) {
-          setSettings({ ...DEFAULTS, ...snap.data() } as Settings)
+          const { gender: _excluded, ...rest } = snap.data()
+          setSettings({ ...DEFAULTS, ...rest } as Settings)
         }
         setLoading(false)
       },
@@ -59,5 +62,27 @@ export function useSettings(): { settings: Settings; loading: boolean } {
     )
   }, [])
 
-  return { settings, loading }
+  // Subscribe to secrets/config ONLY after reveal — Firestore rules block it before then.
+  // This ensures gender is never exposed in network requests before the reveal.
+  useEffect(() => {
+    if (settings.revealPhase !== 'revealed') return
+    const ref = doc(db, 'secrets', 'config')
+    return onSnapshot(
+      ref,
+      snap => {
+        if (snap.exists()) {
+          const data = snap.data()
+          if (data.gender === 'boy' || data.gender === 'girl') {
+            setSecretGender(data.gender)
+          }
+        }
+      },
+      err => console.error('[useSettings] secrets error:', err.code, err.message)
+    )
+  }, [settings.revealPhase])
+
+  return {
+    settings: { ...settings, gender: secretGender ?? DEFAULTS.gender },
+    loading,
+  }
 }

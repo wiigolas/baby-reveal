@@ -8,8 +8,16 @@ service cloud.firestore {
     }
 
     // Anyone can read settings; anyone can write (admin uses password in UI, not Firebase auth)
+    // NOTE: gender is NOT stored here — it lives in /secrets/config
     match /settings/{doc} {
       allow read, write: if true;
+    }
+
+    // Gender is stored here and only becomes readable AFTER the reveal.
+    // This prevents guests from inspecting network requests to find the answer.
+    match /secrets/{doc} {
+      allow read: if get(/databases/$(database)/documents/settings/config).data.revealPhase == 'revealed';
+      allow write: if true; // Admin writes without Firebase auth
     }
   }
 }

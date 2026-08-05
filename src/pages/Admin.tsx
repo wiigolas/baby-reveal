@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, onSnapshot, orderBy, query, doc, setDoc, updateDoc } from 'firebase/firestore'
+import { collection, onSnapshot, orderBy, query, doc, setDoc, updateDoc, getDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { Link } from 'react-router-dom'
 import { useSettings, DEFAULTS, type Settings } from '../hooks/useSettings'
@@ -88,11 +88,32 @@ export default function Admin() {
   const [tab, setTab] = useState<'overview' | 'guests' | 'names' | 'messages' | 'baby' | 'settings'>('overview')
   const [guestFilter, setGuestFilter] = useState<'all' | 'yes' | 'no'>('all')
   const { settings } = useSettings()
-  const [draft, setDraft] = useState<Settings>(DEFAULTS)
+  const [draft, setDraft] = useState<Settings>(() => ({
+    ...DEFAULTS,
+    // Load gender from localStorage — admin needs it even before reveal unlocks secrets/config
+    gender: (localStorage.getItem('admin_gender') as 'boy' | 'girl') ?? DEFAULTS.gender,
+  }))
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
-  useEffect(() => { setDraft(settings) }, [settings])
+  useEffect(() => {
+    setDraft(prev => ({
+      ...settings,
+      // Keep localStorage gender (real value); settings.gender is just DEFAULTS before reveal
+      gender: (localStorage.getItem('admin_gender') as 'boy' | 'girl') ?? prev.gender,
+    }))
+  }, [settings])
+
+  // Also load gender from secrets/config if already revealed (e.g. admin refreshes after reveal)
+  useEffect(() => {
+    getDoc(doc(db, 'secrets', 'config')).then(snap => {
+      if (snap.exists() && snap.data().gender) {
+        const g = snap.data().gender as 'boy' | 'girl'
+        setDraft(prev => ({ ...prev, gender: g }))
+        localStorage.setItem('admin_gender', g)
+      }
+    }).catch(() => { /* not readable before reveal — expected */ })
+  }, [])
 
   useEffect(() => {
     if (!authed) return
@@ -106,7 +127,13 @@ export default function Admin() {
 
   async function saveSettings() {
     setSaving(true)
-    await setDoc(doc(db, 'settings', 'config'), draft)
+    const { gender, ...publicSettings } = draft
+    // Write gender to secrets/config (only readable after reveal)
+    await setDoc(doc(db, 'secrets', 'config'), { gender })
+    // Write everything else to public settings/config
+    await setDoc(doc(db, 'settings', 'config'), publicSettings)
+    // Persist gender locally so admin can see it even before reveal
+    localStorage.setItem('admin_gender', gender)
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -445,7 +472,7 @@ export default function Admin() {
                       <button
                         key={g}
                         type="button"
-                        onClick={() => setDraft(d => ({ ...d, gender: g }))}
+                        onClick={() => { setDraft(d => ({ ...d, gender: g })); localStorage.setItem('admin_gender', g) }}
                         className={`py-4 rounded-2xl border-2 font-medium text-base transition-all duration-200 ${draft.gender === g
                           ? g === 'boy'
                             ? 'border-blue-400 bg-blue-50 text-blue-600 shadow-sm'
