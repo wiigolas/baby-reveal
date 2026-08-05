@@ -139,6 +139,10 @@ export default function Admin() {
     setTimeout(() => setSaved(false), 2000)
   }
 
+  async function startDrumroll() {
+    await updateDoc(doc(db, 'settings', 'config'), { revealPhase: 'drumroll' })
+  }
+
   async function resetReveal() {
     await updateDoc(doc(db, 'settings', 'config'), { revealPhase: 'waiting' })
   }
@@ -629,6 +633,14 @@ export default function Admin() {
                   <p className="text-sm text-gray-400">
                     Nuvarande fas: <strong className="text-gray-600">{settings.revealPhase}</strong>
                   </p>
+                  {settings.revealPhase === 'waiting' && (
+                    <button
+                      onClick={startDrumroll}
+                      className="btn-primary w-full bg-gradient-to-r from-pink-400 to-purple-500 border-0"
+                    >
+                      🎊 Starta avslöjning
+                    </button>
+                  )}
                   <button
                     onClick={resetReveal}
                     className="btn-secondary w-full"

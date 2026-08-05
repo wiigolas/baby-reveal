@@ -171,10 +171,7 @@ export default function Reveal() {
   const phase = settings.revealPhase
 
   const [rsvps, setRsvps] = useState<RSVP[]>([])
-  const [showTrigger, setShowTrigger] = useState(false)
   const [drumrollCount, setDrumrollCount] = useState(3)
-  const [pwInput, setPwInput] = useState('')
-  const [pwError, setPwError] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useConfetti(canvasRef, phase === 'revealed', ACTUAL_GENDER)
@@ -244,24 +241,8 @@ export default function Reveal() {
     ? isBoy ? 'text-blue-400' : 'text-pink-400'
     : 'text-white'
 
-  async function triggerReveal() {
-    if (phase !== 'waiting') return
-    if (pwInput !== 'babyreveal2026') {
-      setPwError(true)
-      setTimeout(() => setPwError(false), 1500)
-      return
-    }
-    await updateDoc(doc(db, 'settings', 'config'), { revealPhase: 'drumroll' }).catch(console.error)
-  }
-
-  return (
-    <div
-      className={`fixed inset-0 flex flex-col transition-colors duration-1000 ${bgClass}`}
-      onMouseMove={e => {
-        const nearCorner = e.clientX > window.innerWidth - 80 && e.clientY > window.innerHeight - 80
-        setShowTrigger(nearCorner)
-      }}
-    >
+return (
+    <div className={`fixed inset-0 flex flex-col transition-colors duration-1000 ${bgClass}`}>
       {/* Confetti canvas — always on top */}
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-20" />
 
@@ -352,35 +333,6 @@ export default function Reveal() {
         <ZoneNames items={bottomNames} zone="bottom" colorClass={colorClass} phase={phase} />
       </div>
 
-      {/* Hidden admin trigger */}
-      {phase === 'waiting' && showTrigger && (
-        <div
-          className="fixed bottom-6 right-6 z-30 flex gap-2 items-center animate-fade-in"
-          onMouseEnter={() => setShowTrigger(true)}
-          onMouseLeave={() => setShowTrigger(false)}
-        >
-          <input
-            type="password"
-            autoComplete="new-password"
-            placeholder="Lösenord"
-            value={pwInput}
-            onChange={e => setPwInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && triggerReveal()}
-            autoFocus
-            className={`text-xs px-3 py-2 rounded-full backdrop-blur-sm border
-                        bg-white/10 text-white placeholder-white/40 outline-none w-28
-                        transition-colors duration-200
-                        ${pwError ? 'border-red-400' : 'border-white/20'}`}
-          />
-          <button
-            onClick={triggerReveal}
-            className="bg-white/20 hover:bg-white/30 text-white text-xs px-4 py-2
-                       rounded-full backdrop-blur-sm border border-white/20 transition-all duration-200"
-          >
-            Avslöja 🎊
-          </button>
-        </div>
-      )}
     </div>
   )
 }
