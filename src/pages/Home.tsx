@@ -17,7 +17,7 @@ interface StoredSubmission {
 
 function ExtraNameGuessCard({ submission }: { submission: StoredSubmission }) {
   const otherGender = submission.gender === 'boy' ? 'girl' : 'boy'
-  const otherText   = otherGender === 'girl' ? 'flicka' : 'pojke'
+  const otherText   = otherGender === 'girl' ? 'flick' : 'pojk'
   const [name, setName]           = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone]           = useState(!!localStorage.getItem(EXTRA_GUESS_KEY))
